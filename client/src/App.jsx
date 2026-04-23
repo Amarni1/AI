@@ -1,49 +1,24 @@
-import { NavLink, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Wallet from "./pages/Wallet";
 import Transactions from "./pages/Transactions";
 import Settings from "./pages/Settings";
-
-const navItems = [
-  { to: "/", label: "Dashboard" },
-  { to: "/wallet", label: "Wallet" },
-  { to: "/transactions", label: "Transactions" },
-  { to: "/settings", label: "Settings" }
-];
+import Navbar from "./components/Navbar";
+import { useTheme } from "./hooks/useTheme";
 
 export default function App() {
-  return (
-    <div className="min-h-screen bg-halo text-ma-black">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
-        <header className="mb-8 flex flex-col gap-4 rounded-[30px] border border-black/5 bg-white/70 p-5 shadow-card backdrop-blur-xl md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="font-display text-sm uppercase tracking-[0.35em] text-ma-gold">
-              Minima AI
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold text-ma-black">
-              Full Working Base Dashboard
-            </h1>
-          </div>
-          <nav className="flex flex-wrap gap-3">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  [
-                    "rounded-full border px-4 py-2 text-sm transition",
-                    isActive
-                      ? "border-black bg-black text-ma-gold shadow-[0_12px_28px_rgba(0,0,0,0.18)]"
-                      : "border-black/10 bg-white text-ma-black hover:border-ma-gold hover:text-ma-gold"
-                  ].join(" ")
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-        </header>
+  const { isDark, toggleTheme } = useTheme();
 
+  return (
+    <div className="min-h-screen bg-halo text-slate-900 dark:text-white">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -left-24 top-16 h-72 w-72 rounded-full bg-ma-gold/20 blur-3xl dark:bg-ma-gold/15" />
+        <div className="absolute right-0 top-0 h-80 w-80 rounded-full bg-white/50 blur-3xl dark:bg-sky-400/10" />
+        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-amber-200/30 blur-3xl dark:bg-indigo-500/10" />
+      </div>
+
+      <div className="relative mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8">
+        <Navbar isDark={isDark} onToggleTheme={toggleTheme} />
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Dashboard />} />

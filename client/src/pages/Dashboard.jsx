@@ -4,6 +4,8 @@ import WalletCard from "../components/WalletCard";
 import ActionButtons from "../components/ActionButtons";
 import ConfirmModal from "../components/ConfirmModal";
 import TransactionHistory from "../components/TransactionHistory";
+import SendPanel from "../components/SendPanel";
+import StatusPanel from "../components/StatusPanel";
 import { useMiniMask } from "../hooks/useMiniMask";
 import { saveRecentSend } from "../services/transactionHistory";
 
@@ -22,7 +24,8 @@ export default function Dashboard() {
     isChecking,
     loadCoins,
     refresh,
-    send
+    send,
+    tokenBalances
   } = useMiniMask();
 
   async function connectWallet() {
@@ -108,6 +111,7 @@ export default function Dashboard() {
           onInstall={handleInstallMiniMask}
           onRefresh={refreshWallet}
           connected={Boolean(address)}
+          tokenBalances={tokenBalances}
         />
         <ChatBox onIntent={handleIntent} />
         <TransactionHistory
@@ -119,8 +123,14 @@ export default function Dashboard() {
         />
       </div>
       <div className="space-y-6">
-        <section className="rounded-[30px] border border-black/5 bg-white/70 p-6 shadow-card backdrop-blur-xl">
-          <p className="text-xs uppercase tracking-[0.3em] text-ma-gold">Quick Actions</p>
+        <section className="panel-surface p-6">
+          <p className="section-kicker">Quick Actions</p>
+          <h2 className="mt-2 font-display text-3xl font-semibold text-slate-900 dark:text-white">
+            Wallet shortcuts
+          </h2>
+          <p className="mt-2 text-sm leading-7 text-slate-600 dark:text-slate-300">
+            Refresh balances, reconnect the active wallet, and keep the assistant aligned with the latest state.
+          </p>
           <div className="mt-5">
             <ActionButtons
               onBalance={refreshWallet}
@@ -129,39 +139,20 @@ export default function Dashboard() {
           </div>
         </section>
 
-        <section className="rounded-[30px] border border-black/5 bg-white/70 p-6 shadow-card backdrop-blur-xl">
-          <p className="text-xs uppercase tracking-[0.3em] text-ma-gold">Send Minima</p>
-          <form onSubmit={handleSendForm} className="mt-5 space-y-4">
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={sendAmount}
-              onChange={(event) => setSendAmount(event.target.value)}
-              className="w-full rounded-[20px] border border-black/10 bg-white px-4 py-3 text-ma-black outline-none transition focus:border-ma-gold"
-              placeholder="Amount"
-            />
-            <input
-              value={sendAddress}
-              onChange={(event) => setSendAddress(event.target.value)}
-              className="w-full rounded-[20px] border border-black/10 bg-white px-4 py-3 text-ma-black outline-none transition focus:border-ma-gold"
-              placeholder="Recipient address"
-            />
-            <button
-              type="submit"
-              className="w-full rounded-full border border-black bg-black px-5 py-3 font-medium text-ma-gold shadow-[0_12px_28px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5"
-            >
-              Review Transaction
-            </button>
-          </form>
-        </section>
+        <SendPanel
+          connected={Boolean(address)}
+          sendAddress={sendAddress}
+          sendAmount={sendAmount}
+          setSendAddress={setSendAddress}
+          setSendAmount={setSendAmount}
+          onSubmit={handleSendForm}
+        />
 
-        <section className="rounded-[30px] border border-black/5 bg-white/70 p-6 shadow-card backdrop-blur-xl">
-          <p className="text-xs uppercase tracking-[0.3em] text-ma-gold">System Status</p>
-          <p className="mt-4 text-sm leading-7 text-ma-black/80">
-            {error && !isAvailable ? error : status}
-          </p>
-        </section>
+        <StatusPanel
+          connected={Boolean(address)}
+          status={error && !isAvailable ? error : status}
+          tokenCount={tokenBalances.length}
+        />
       </div>
 
       <ConfirmModal

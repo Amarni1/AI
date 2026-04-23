@@ -1,21 +1,64 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  color: #0a0a0a;
-  background: #f8f2e4;
+  color: #0f172a;
+  background: #f6efe1;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  font-family: "Segoe UI", sans-serif;
-  background-image: radial-gradient(circle at top, rgba(212, 175, 55, 0.25), transparent 30%),
-    linear-gradient(180deg, #fffaf0 0%, #f4ecd8 100%);
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  background-image:
+    radial-gradient(circle at top left, rgba(212, 175, 55, 0.2), transparent 26%),
+    radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.84), transparent 18%),
+    linear-gradient(180deg, #fffbf2 0%, #f3ecdc 100%);
+  transition: background-color 220ms ease, color 220ms ease;
+}
+
+html.dark body {
+  color: #f8fafc;
+  background-image:
+    radial-gradient(circle at top left, rgba(212, 175, 55, 0.18), transparent 26%),
+    radial-gradient(circle at 85% 10%, rgba(59, 130, 246, 0.12), transparent 18%),
+    linear-gradient(180deg, #020617 0%, #0f172a 100%);
 }
 
 #root {
   min-height: 100vh;
+}
+
+@layer components {
+  .panel-surface {
+    @apply rounded-[32px] border border-black/5 bg-white/75 shadow-card backdrop-blur-2xl dark:border-white/10 dark:bg-white/5;
+  }
+
+  .section-kicker {
+    @apply text-xs font-semibold uppercase tracking-[0.35em] text-ma-gold;
+  }
+
+  .btn-gold {
+    @apply inline-flex items-center rounded-full border border-[#8b6b10] bg-[linear-gradient(180deg,#f9e9a5_0%,#d4af37_48%,#a87b0f_100%)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-950 shadow-[0_14px_26px_rgba(212,175,55,0.24),inset_0_1px_1px_rgba(255,255,255,0.75)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_18px_34px_rgba(212,175,55,0.34),inset_0_1px_1px_rgba(255,255,255,0.78)] active:translate-y-0 dark:border-[#f5d97d]/40 dark:text-slate-950;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center rounded-full border border-black/10 bg-white/80 px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-700 shadow-[0_12px_26px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-ma-gold hover:text-ma-gold dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:border-ma-gold;
+  }
+
+  .input-premium {
+    @apply w-full rounded-[22px] border border-black/10 bg-white/90 px-4 py-3 text-slate-900 outline-none transition focus:border-ma-gold focus:ring-2 focus:ring-ma-gold/20 dark:border-white/10 dark:bg-black/30 dark:text-white dark:placeholder:text-slate-400;
+  }
+
+  .surface-muted {
+    @apply rounded-[24px] border border-white/70 bg-white/85 shadow-[0_18px_40px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/5;
+  }
 }

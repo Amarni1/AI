@@ -22,6 +22,10 @@ export function parseIntent(message) {
   const safeMessage = sanitizeMessage(message);
   const normalized = safeMessage.toLowerCase();
 
+  if (/(hello|hi|hey|good morning|good afternoon|good evening)/.test(normalized)) {
+    return { intent: "GREETING" };
+  }
+
   if (normalized.includes("balance")) {
     return { intent: "BALANCE" };
   }
@@ -30,12 +34,28 @@ export function parseIntent(message) {
     return { intent: "ADDRESS" };
   }
 
+  if (normalized.includes("wallet") || normalized.includes("connect")) {
+    return { intent: "WALLET_HELP" };
+  }
+
+  if (normalized.includes("blockchain")) {
+    return { intent: "BLOCKCHAIN_HELP" };
+  }
+
+  if (normalized.includes("help")) {
+    return { intent: "HELP" };
+  }
+
   if (normalized.includes("send")) {
     return {
       intent: "SEND",
       amount: extractAmount(safeMessage),
       address: extractAddress(safeMessage)
     };
+  }
+
+  if (normalized.includes("minima")) {
+    return { intent: "MINIMA_INFO" };
   }
 
   return { intent: "UNKNOWN" };

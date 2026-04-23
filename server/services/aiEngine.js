@@ -4,19 +4,51 @@ import { requireConfirmation, validateTransaction } from "./transactionValidator
 export function handleChatMessage(message) {
   const parsed = parseIntent(message);
 
+  if (parsed.intent === "GREETING") {
+    return {
+      intent: "GREETING",
+      message: "Welcome to Minima AI. I can guide wallet actions, explain Minima, and help with blockchain concepts.",
+      reply: "Welcome to Minima AI. I can guide wallet actions, explain Minima, and help with blockchain concepts."
+    };
+  }
+
   if (parsed.intent === "BALANCE") {
     return {
       intent: "BALANCE",
-      message: "Use MiniMask to fetch your wallet balance.",
-      reply: "Use MiniMask to fetch your wallet balance."
+      message: "Use the wallet panel to refresh MiniMask and inspect your live token balances.",
+      reply: "Use the wallet panel to refresh MiniMask and inspect your live token balances."
     };
   }
 
   if (parsed.intent === "ADDRESS") {
     return {
       intent: "ADDRESS",
-      message: "You can get your address via MiniMask.account.getAddress().",
-      reply: "You can get your address via MiniMask.account.getAddress()."
+      message: "Connect MiniMask and I will surface your active wallet address in the dashboard.",
+      reply: "Connect MiniMask and I will surface your active wallet address in the dashboard."
+    };
+  }
+
+  if (parsed.intent === "WALLET_HELP") {
+    return {
+      intent: "WALLET_HELP",
+      message: "For wallet help: connect MiniMask, refresh balances, review the address card, and confirm transfers only after checking the recipient and amount.",
+      reply: "For wallet help: connect MiniMask, refresh balances, review the address card, and confirm transfers only after checking the recipient and amount."
+    };
+  }
+
+  if (parsed.intent === "BLOCKCHAIN_HELP") {
+    return {
+      intent: "BLOCKCHAIN_HELP",
+      message: "Blockchains group transactions into verifiable blocks, and wallets like MiniMask let you sign actions so the network can verify ownership without exposing private keys.",
+      reply: "Blockchains group transactions into verifiable blocks, and wallets like MiniMask let you sign actions so the network can verify ownership without exposing private keys."
+    };
+  }
+
+  if (parsed.intent === "HELP") {
+    return {
+      intent: "HELP",
+      message: "I can help with greetings, wallet setup, addresses, balances, secure send guidance, Minima education, and core blockchain concepts.",
+      reply: "I can help with greetings, wallet setup, addresses, balances, secure send guidance, Minima education, and core blockchain concepts."
     };
   }
 
@@ -43,17 +75,17 @@ export function handleChatMessage(message) {
     };
   }
 
-  if (message.toLowerCase().includes("minima")) {
+  if (parsed.intent === "MINIMA_INFO") {
     return {
-      intent: "INFO",
-      message: "Minima is a fully decentralized mobile blockchain network.",
-      reply: "Minima is a fully decentralized mobile blockchain network."
+      intent: "MINIMA_INFO",
+      message: "Minima is a lightweight blockchain network designed for decentralization at the edge, allowing users to run and verify from mobile and smaller devices.",
+      reply: "Minima is a lightweight blockchain network designed for decentralization at the edge, allowing users to run and verify from mobile and smaller devices."
     };
   }
 
   return {
     intent: "UNKNOWN",
-    message: "I can help with balance, address, send requests, and Minima basics.",
-    reply: "I can help with balance, address, send requests, and Minima basics."
+    message: "Ask me about wallet setup, token balances, secure sends, Minima, or how blockchain systems work.",
+    reply: "Ask me about wallet setup, token balances, secure sends, Minima, or how blockchain systems work."
   };
 }

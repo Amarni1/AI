@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import TransactionHistory from "../components/TransactionHistory";
 import WalletCard from "../components/WalletCard";
 import { useMiniMask } from "../hooks/useMiniMask";
 
@@ -11,7 +12,9 @@ export default function Wallet() {
     error,
     isAvailable,
     isChecking,
-    refresh
+    loadCoins,
+    refresh,
+    tokenBalances
   } = useMiniMask();
 
   async function connectWallet() {
@@ -52,12 +55,19 @@ export default function Wallet() {
         onInstall={handleInstallMiniMask}
         onRefresh={refreshWallet}
         connected={Boolean(address)}
+        tokenBalances={tokenBalances}
       />
       {status ? (
-        <section className="rounded-[28px] border border-black/5 bg-white/70 p-6 text-sm text-ma-black/80">
+        <section className="panel-surface p-6 text-sm text-slate-700 dark:text-slate-200">
           {status}
         </section>
       ) : null}
+      <TransactionHistory
+        address={address}
+        isAvailable={isAvailable}
+        isChecking={isChecking}
+        loadCoins={loadCoins}
+      />
     </div>
   );
 }

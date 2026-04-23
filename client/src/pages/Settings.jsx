@@ -6,16 +6,19 @@ const settings = [
 
 export default function Settings() {
   return (
-    <section className="rounded-[30px] border border-black/5 bg-white/70 p-6 shadow-card backdrop-blur-xl">
-      <p className="text-xs uppercase tracking-[0.3em] text-ma-gold">Architecture Settings</p>
+    <section className="panel-surface p-6">
+      <p className="section-kicker">Architecture Settings</p>
+      <h2 className="mt-3 font-display text-3xl font-semibold text-slate-900 dark:text-white">
+        Premium dashboard configuration
+      </h2>
       <div className="mt-6 grid gap-4">
         {settings.map((item) => (
           <div
             key={item.label}
-            className="rounded-[24px] border border-white/60 bg-white/80 p-4"
+            className="surface-muted p-4"
           >
-            <p className="text-xs uppercase tracking-[0.25em] text-black/45">{item.label}</p>
-            <p className="mt-2 text-ma-black">{item.value}</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-slate-400 dark:text-slate-500">{item.label}</p>
+            <p className="mt-2 text-slate-800 dark:text-slate-100">{item.value}</p>
           </div>
         ))}
       </div>

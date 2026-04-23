@@ -1,38 +1,44 @@
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { formatHistoryTimestamp, mergeHistory } from "../services/transactionHistory";
+import LoadingDots from "./LoadingDots";
 
 function HistoryCard({ item }) {
   const isSent = item.direction === "sent";
 
   return (
-    <article className="rounded-[24px] border border-white/70 bg-white/90 p-5 shadow-[0_18px_44px_rgba(212,175,55,0.08)]">
+    <motion.article
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="surface-muted p-5"
+    >
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.3em] text-ma-gold">
             {isSent ? "Sent" : "Received"}
           </p>
-          <h3 className="mt-2 text-lg font-semibold text-ma-black">
+          <h3 className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
             {item.amount} Minima
           </h3>
         </div>
         <span
           className={
             isSent
-              ? "rounded-full bg-black px-3 py-1 text-xs font-medium text-ma-gold"
-              : "rounded-full bg-[#fff4cc] px-3 py-1 text-xs font-medium text-ma-black"
+              ? "rounded-full bg-slate-950 px-3 py-1 text-xs font-medium text-ma-gold dark:bg-white/10"
+              : "rounded-full bg-[#fff4cc] px-3 py-1 text-xs font-medium text-slate-800 dark:bg-ma-gold/15 dark:text-ma-gold"
           }
         >
           {item.status}
         </span>
       </div>
 
-      <div className="mt-4 space-y-3 text-sm text-ma-black/75">
-        <p className="break-all rounded-[18px] bg-[#fffaf0] px-4 py-3">
+      <div className="mt-4 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+        <p className="break-all rounded-[18px] bg-[#fffaf0] px-4 py-3 dark:bg-white/5">
           {item.address}
         </p>
         <p>{formatHistoryTimestamp(item.timestamp)}</p>
       </div>
-    </article>
+    </motion.article>
   );
 }
 
@@ -89,29 +95,48 @@ export default function TransactionHistory({
   const hasItems = items.length > 0;
 
   return (
-    <section className="rounded-[30px] border border-black/5 bg-white/70 p-6 shadow-card backdrop-blur-xl">
+    <section className="panel-surface p-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-ma-gold">History</p>
-          <h2 className="mt-2 text-2xl font-semibold text-ma-black">Transaction Activity</h2>
+          <p className="section-kicker">History</p>
+          <h2 className="mt-2 font-display text-3xl font-semibold text-slate-900 dark:text-white">
+            Transaction Activity
+          </h2>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
+            Signed transfers and detected on-chain wallet activity with readable timestamps.
+          </p>
         </div>
         {loading ? (
-          <span className="rounded-full bg-[#fff4cc] px-3 py-1 text-xs font-medium text-ma-black">
-            Loading...
-          </span>
+          <LoadingDots label="Loading activity" />
         ) : null}
       </div>
 
       {error ? (
-        <div className="mt-5 rounded-[22px] border border-amber-200 bg-[#fff9e8] px-4 py-3 text-sm text-amber-900">
+        <div className="mt-5 rounded-[22px] border border-amber-200 bg-[#fff9e8] px-4 py-3 text-sm text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
           {error}
         </div>
       ) : null}
 
+      {loading ? (
+        <div className="mt-6 grid gap-4">
+          {[0, 1, 2].map((item) => (
+            <div
+              key={item}
+              className="surface-muted animate-pulse-soft p-5"
+            >
+              <div className="h-3 w-24 rounded-full bg-ma-gold/30" />
+              <div className="mt-4 h-8 w-40 rounded-full bg-slate-200 dark:bg-white/10" />
+              <div className="mt-4 h-12 rounded-[18px] bg-slate-200 dark:bg-white/10" />
+              <div className="mt-4 h-4 w-28 rounded-full bg-slate-200 dark:bg-white/10" />
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       {!loading && !hasItems ? (
-        <div className="mt-6 rounded-[24px] border border-dashed border-ma-gold/40 bg-[#fffaf0] p-8 text-center">
-          <p className="text-lg font-semibold text-ma-black">No transactions yet</p>
-          <p className="mt-2 text-sm text-ma-black/70">
+        <div className="mt-6 rounded-[24px] border border-dashed border-ma-gold/40 bg-[#fffaf0] p-8 text-center dark:bg-white/5">
+          <p className="text-lg font-semibold text-slate-900 dark:text-white">No transactions yet</p>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
             Successful sends and detected wallet activity will appear here.
           </p>
         </div>

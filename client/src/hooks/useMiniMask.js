@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { MiniMask } from "../services/minimask";
+import { normalizeTokenBalances } from "../services/walletData";
 
 const POLL_INTERVAL_MS = 500;
 const POLL_TIMEOUT_MS = 10000;
@@ -24,6 +25,7 @@ export function useMiniMask() {
   const [isAvailable, setIsAvailable] = useState(false);
   const [address, setAddress] = useState("");
   const [balance, setBalance] = useState("");
+  const [tokenBalances, setTokenBalances] = useState([]);
   const [error, setError] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -104,8 +106,15 @@ export function useMiniMask() {
         setIsInitialized(true);
       }
 
-      const nextAddress = await MiniMask.getAddressAsync();
+      const [nextAddress, nextBalance] = await Promise.all([
+        MiniMask.getAddressAsync(),
+        MiniMask.balanceAsync()
+      ]);
+      const normalizedBalances = normalizeTokenBalances(nextBalance);
+
       setAddress(String(nextAddress ?? ""));
+      setTokenBalances(normalizedBalances);
+      setBalance(normalizedBalances[0]?.amount ?? String(nextBalance ?? ""));
       setError("");
       return String(nextAddress ?? "");
     } catch (currentError) {
@@ -113,7 +122,7 @@ export function useMiniMask() {
       setError(message);
       throw new Error(message);
     }
-  }, []);
+  }, [isInitialized]);
 
   const refresh = useCallback(async () => {
     try {
@@ -130,14 +139,17 @@ export function useMiniMask() {
         MiniMask.getAddressAsync(),
         MiniMask.balanceAsync()
       ]);
+      const normalizedBalances = normalizeTokenBalances(nextBalance);
 
       setAddress(String(nextAddress ?? ""));
-      setBalance(String(nextBalance ?? ""));
+      setBalance(normalizedBalances[0]?.amount ?? String(nextBalance ?? ""));
+      setTokenBalances(normalizedBalances);
       setError("");
 
       return {
         address: String(nextAddress ?? ""),
-        balance: String(nextBalance ?? "")
+        balance: normalizedBalances[0]?.amount ?? String(nextBalance ?? ""),
+        tokenBalances: normalizedBalances
       };
     } catch (currentError) {
       const message = currentError.message || "Unable to refresh MiniMask.";
@@ -198,6 +210,7 @@ export function useMiniMask() {
     isReady,
     loadCoins,
     refresh,
-    send
+    send,
+    tokenBalances
   };
 }
