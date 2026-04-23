@@ -40,7 +40,7 @@ export default function Wallet() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleInstallMiniMask() {
-    window.open("https://minima.global/download", "_blank", "noopener,noreferrer");
+    window.open("https://minimask.org/index.html", "_blank", "noopener,noreferrer");
   }
 
   return (

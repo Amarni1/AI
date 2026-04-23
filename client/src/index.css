@@ -18,19 +18,20 @@ body {
   min-width: 320px;
   min-height: 100vh;
   font-family: "Manrope", "Segoe UI", sans-serif;
+  font-weight: 500;
   background-image:
-    radial-gradient(circle at top left, rgba(212, 175, 55, 0.2), transparent 26%),
-    radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.84), transparent 18%),
-    linear-gradient(180deg, #fffbf2 0%, #f3ecdc 100%);
+    radial-gradient(circle at top left, rgba(212, 175, 55, 0.18), transparent 22%),
+    radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.84), transparent 16%),
+    linear-gradient(180deg, #fffdf8 0%, #efe6d3 100%);
   transition: background-color 220ms ease, color 220ms ease;
 }
 
 html.dark body {
   color: #f8fafc;
   background-image:
-    radial-gradient(circle at top left, rgba(212, 175, 55, 0.18), transparent 26%),
-    radial-gradient(circle at 85% 10%, rgba(59, 130, 246, 0.12), transparent 18%),
-    linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    radial-gradient(circle at top left, rgba(212, 175, 55, 0.1), transparent 20%),
+    radial-gradient(circle at 85% 10%, rgba(255, 255, 255, 0.04), transparent 12%),
+    linear-gradient(180deg, #000000 0%, #020617 35%, #020617 100%);
 }
 
 #root {
@@ -39,26 +40,26 @@ html.dark body {
 
 @layer components {
   .panel-surface {
-    @apply rounded-[32px] border border-black/5 bg-white/75 shadow-card backdrop-blur-2xl dark:border-white/10 dark:bg-white/5;
+    @apply rounded-[32px] border border-black/5 bg-white/95 shadow-card backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/95;
   }
 
   .section-kicker {
-    @apply text-xs font-semibold uppercase tracking-[0.35em] text-ma-gold;
+    @apply text-xs font-bold uppercase tracking-[0.35em] text-ma-gold;
   }
 
   .btn-gold {
-    @apply inline-flex items-center rounded-full border border-[#8b6b10] bg-[linear-gradient(180deg,#f9e9a5_0%,#d4af37_48%,#a87b0f_100%)] px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-950 shadow-[0_14px_26px_rgba(212,175,55,0.24),inset_0_1px_1px_rgba(255,255,255,0.75)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_18px_34px_rgba(212,175,55,0.34),inset_0_1px_1px_rgba(255,255,255,0.78)] active:translate-y-0 dark:border-[#f5d97d]/40 dark:text-slate-950;
+    @apply inline-flex items-center rounded-full border border-[#8b6b10] bg-[linear-gradient(180deg,#fdf1b8_0%,#e0ba43_45%,#a87910_100%)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.18em] text-slate-950 shadow-[0_16px_28px_rgba(212,175,55,0.28),inset_0_1px_1px_rgba(255,255,255,0.8)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_36px_rgba(212,175,55,0.38),inset_0_1px_1px_rgba(255,255,255,0.82)] active:translate-y-0 dark:border-[#f5d97d]/40 dark:text-slate-950;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center rounded-full border border-black/10 bg-white/80 px-5 py-3 text-sm font-semibold uppercase tracking-[0.18em] text-slate-700 shadow-[0_12px_26px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-ma-gold hover:text-ma-gold dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:border-ma-gold;
+    @apply inline-flex items-center rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-bold uppercase tracking-[0.18em] text-slate-800 shadow-[0_12px_26px_rgba(15,23,42,0.08)] transition duration-200 hover:-translate-y-0.5 hover:border-ma-gold hover:text-ma-gold dark:border-white/10 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-ma-gold;
   }
 
   .input-premium {
-    @apply w-full rounded-[22px] border border-black/10 bg-white/90 px-4 py-3 text-slate-900 outline-none transition focus:border-ma-gold focus:ring-2 focus:ring-ma-gold/20 dark:border-white/10 dark:bg-black/30 dark:text-white dark:placeholder:text-slate-400;
+    @apply w-full rounded-[22px] border border-black/10 bg-white px-4 py-3 text-slate-950 font-semibold outline-none transition focus:border-ma-gold focus:ring-2 focus:ring-ma-gold/20 dark:border-white/10 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-400;
   }
 
   .surface-muted {
-    @apply rounded-[24px] border border-white/70 bg-white/85 shadow-[0_18px_40px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/5;
+    @apply rounded-[24px] border border-white/70 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.08)] dark:border-white/10 dark:bg-slate-900;
   }
 }

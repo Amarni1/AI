@@ -86,6 +86,18 @@ export const MiniMask = {
     });
   },
 
+  checkTxPow(txpowid, callback) {
+    const minimask = getMiniMask();
+
+    if (typeof minimask.meg?.checktxpow !== "function") {
+      throw new Error("MiniMask confirmation checks are not available in this wallet.");
+    }
+
+    minimask.meg.checktxpow(txpowid, (result) => {
+      callback(unwrapResponse(result, result));
+    });
+  },
+
   getAddressAsync() {
     return new Promise((resolve, reject) => {
       try {
@@ -130,6 +142,16 @@ export const MiniMask = {
     return new Promise((resolve, reject) => {
       try {
         this.coins((result) => resolve(result));
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  checkTxPowAsync(txpowid) {
+    return new Promise((resolve, reject) => {
+      try {
+        this.checkTxPow(txpowid, (result) => resolve(result));
       } catch (error) {
         reject(error);
       }

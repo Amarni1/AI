@@ -5,6 +5,18 @@ import LoadingDots from "./LoadingDots";
 
 function HistoryCard({ item }) {
   const isSent = item.direction === "sent";
+  const statusText = String(item.status || "").toLowerCase();
+  const statusClass = statusText.includes("confirm")
+    ? "rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+    : statusText.includes("processing")
+      ? "rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+      : statusText.includes("submitted")
+        ? "rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-ma-gold dark:bg-white/10"
+        : statusText.includes("timeout")
+          ? "rounded-full bg-rose-100 px-3 py-1 text-xs font-medium text-rose-700 dark:bg-rose-500/15 dark:text-rose-300"
+          : isSent
+            ? "rounded-full bg-slate-950 px-3 py-1 text-xs font-medium text-ma-gold dark:bg-white/10"
+            : "rounded-full bg-[#fff4cc] px-3 py-1 text-xs font-medium text-slate-800 dark:bg-ma-gold/15 dark:text-ma-gold";
 
   return (
     <motion.article
@@ -22,11 +34,7 @@ function HistoryCard({ item }) {
           </h3>
         </div>
         <span
-          className={
-            isSent
-              ? "rounded-full bg-slate-950 px-3 py-1 text-xs font-medium text-ma-gold dark:bg-white/10"
-              : "rounded-full bg-[#fff4cc] px-3 py-1 text-xs font-medium text-slate-800 dark:bg-ma-gold/15 dark:text-ma-gold"
-          }
+          className={statusClass}
         >
           {item.status}
         </span>
@@ -36,6 +44,7 @@ function HistoryCard({ item }) {
         <p className="break-all rounded-[18px] bg-[#fffaf0] px-4 py-3 dark:bg-white/5">
           {item.address}
         </p>
+        {item.detail ? <p>{item.detail}</p> : null}
         <p>{formatHistoryTimestamp(item.timestamp)}</p>
       </div>
     </motion.article>

@@ -5,8 +5,7 @@ import ThemeToggle from "./ThemeToggle";
 const navItems = [
   { to: "/", label: "Dashboard" },
   { to: "/wallet", label: "Wallet" },
-  { to: "/transactions", label: "History" },
-  { to: "/settings", label: "Settings" }
+  { to: "/transactions", label: "History" }
 ];
 
 export default function Navbar({ isDark, onToggleTheme }) {
@@ -14,7 +13,7 @@ export default function Navbar({ isDark, onToggleTheme }) {
     <motion.header
       initial={{ opacity: 0, y: -18 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-8 rounded-[34px] border border-black/5 bg-white/75 px-5 py-5 shadow-card backdrop-blur-2xl dark:border-white/10 dark:bg-black/25 sm:px-6"
+      className="mb-8 rounded-[34px] border border-black/5 bg-white/95 px-5 py-5 shadow-card backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/95 sm:px-6"
     >
       <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex items-center gap-4">
@@ -31,7 +30,7 @@ export default function Navbar({ isDark, onToggleTheme }) {
             <h1 className="mt-1 font-display text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl">
               Premium Wallet Intelligence
             </h1>
-            <p className="mt-2 max-w-2xl text-sm text-slate-600 dark:text-slate-300">
+            <p className="mt-2 max-w-2xl text-sm font-medium text-slate-700 dark:text-slate-200">
               Conversational fintech dashboard for secure Minima wallet actions, education,
               and on-chain visibility.
             </p>

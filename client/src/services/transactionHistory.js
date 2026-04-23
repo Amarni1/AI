@@ -144,11 +144,27 @@ export function saveRecentSend(record) {
     amount: String(record.amount),
     address: String(record.address),
     timestamp: record.timestamp || Date.now(),
-    status: record.status || "Submitted in MiniMask"
+    status: record.status || "Submitted in MiniMask",
+    detail: record.detail || "",
+    txpowid: record.txpowid || record.id || ""
   };
 
   const nextRecords = [nextRecord, ...getRecentSends()]
     .slice(0, MAX_RECENT_SENDS);
+
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords));
+}
+
+export function updateRecentSend(recordId, patch) {
+  if (typeof window === "undefined" || !recordId) {
+    return;
+  }
+
+  const nextRecords = getRecentSends().map((record) =>
+    record.id === recordId || record.txpowid === recordId
+      ? { ...record, ...patch }
+      : record
+  );
 
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords));
 }
@@ -171,6 +187,7 @@ export function normalizeWalletHistory(rawCoins, activeAddress) {
       address: parseAddress(record),
       timestamp,
       status: record.status || (direction === "sent" ? "On-chain activity" : "Received in wallet"),
+      detail: record.detail || "",
       raw: record
     };
   });
