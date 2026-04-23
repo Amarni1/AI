@@ -35,7 +35,7 @@ export default function StatusPanel({ connected, status, tokenCount, transaction
     },
     {
       label: "Assistant",
-      value: "Ready for wallet, education, and blockchain help",
+      value: "Ready for wallet, swaps, education, and blockchain help",
       accent: "text-slate-900 dark:text-white"
     }
   ];

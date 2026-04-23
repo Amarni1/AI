@@ -169,12 +169,13 @@ export const MiniMask = {
     });
   },
 
-  send(amount, address, callback) {
+  send(amount, address, callback, options = {}) {
     ensureMiniMask();
     const safeAmount = String(amount);
-    const state = { 0: safeAmount, 1: address };
+    const tokenid = options.tokenid || "0x00";
+    const state = options.state || { 0: safeAmount, 1: address };
 
-    window.MINIMASK.account.send(safeAmount, address, "0x00", state, (result) => {
+    window.MINIMASK.account.send(safeAmount, address, tokenid, state, (result) => {
       callback(extractPayload(result) ?? result);
     });
   },
@@ -241,10 +242,10 @@ export const MiniMask = {
     });
   },
 
-  sendAsync(amount, address) {
+  sendAsync(amount, address, options = {}) {
     return new Promise((resolve, reject) => {
       try {
-        this.send(amount, address, (result) => resolve(result));
+        this.send(amount, address, (result) => resolve(result), options);
       } catch (error) {
         reject(error);
       }

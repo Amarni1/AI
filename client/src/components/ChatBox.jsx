@@ -5,9 +5,10 @@ import LoadingDots from "./LoadingDots";
 const quickPrompts = [
   "Hello MA",
   "How do I connect my wallet?",
+  "Swap 10 minima to usdt",
+  "Show token prices",
   "Explain Minima like I'm new",
-  "How does blockchain security work?",
-  "Show me wallet help"
+  "How does blockchain security work?"
 ];
 
 export default function ChatBox({ onIntent }) {

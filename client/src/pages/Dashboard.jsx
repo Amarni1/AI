@@ -6,10 +6,13 @@ import ConfirmModal from "../components/ConfirmModal";
 import TransactionHistory from "../components/TransactionHistory";
 import SendPanel from "../components/SendPanel";
 import StatusPanel from "../components/StatusPanel";
+import ExchangeHero from "../components/ExchangeHero";
+import ExchangeModal from "../components/ExchangeModal";
 import { useMiniMask } from "../hooks/useMiniMask";
 import { MiniMask } from "../services/minimask";
 import { updateRecentSend, saveRecentSend } from "../services/transactionHistory";
 import {
+  buildSwapFlow,
   buildTransactionFlow,
   extractTxPowId,
   isTxConfirmed,
@@ -18,7 +21,10 @@ import {
 } from "../services/transactionStatus";
 
 export default function Dashboard() {
+  const exchangeAddress = import.meta.env.VITE_EXCHANGE_ADDRESS ?? "";
   const [pendingTx, setPendingTx] = useState(null);
+  const [pendingSwap, setPendingSwap] = useState(null);
+  const [isExchangeOpen, setIsExchangeOpen] = useState(false);
   const [status, setStatus] = useState("Ready.");
   const [sendAmount, setSendAmount] = useState("");
   const [sendAddress, setSendAddress] = useState("");
@@ -66,6 +72,12 @@ export default function Dashboard() {
   function handleIntent(result) {
     if (result.intent === "SEND" && result.confirmationRequired) {
       setPendingTx(result.transaction);
+      setStatus(result.reply ?? result.message);
+      return;
+    }
+
+    if (result.swapQuote) {
+      setPendingSwap(result.swapQuote);
       setStatus(result.reply ?? result.message);
       return;
     }
@@ -169,6 +181,124 @@ export default function Dashboard() {
     }
   }
 
+  async function monitorSwapConfirmation(txpowid, quote) {
+    const pollToken = ++activePollRef.current;
+
+    await new Promise((resolve) => window.setTimeout(resolve, 1200));
+    if (pollToken !== activePollRef.current) {
+      return;
+    }
+
+    const processingFlow = buildSwapFlow("processing", quote, txpowid);
+    setTransactionFlow(processingFlow);
+    setStatus(processingFlow.detail);
+    updateRecentSend(txpowid, {
+      status: processingFlow.badge,
+      detail: processingFlow.detail
+    });
+    setHistoryRefreshToken((current) => current + 1);
+
+    const startedAt = Date.now();
+
+    while (Date.now() - startedAt < TX_CONFIRMATION_TIMEOUT_MS) {
+      if (pollToken !== activePollRef.current) {
+        return;
+      }
+
+      try {
+        const response = await MiniMask.checkTxPowAsync(txpowid);
+
+        if (isTxConfirmed(response)) {
+          const successFlow = buildSwapFlow("success", quote, txpowid);
+          setTransactionFlow(successFlow);
+          setStatus(successFlow.detail);
+          updateRecentSend(txpowid, {
+            status: successFlow.badge,
+            detail: successFlow.detail
+          });
+          setHistoryRefreshToken((current) => current + 1);
+          await refresh();
+          return;
+        }
+      } catch (error) {
+        setStatus(error.message);
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, TX_POLL_INTERVAL_MS));
+    }
+
+    if (pollToken !== activePollRef.current) {
+      return;
+    }
+
+    const timeoutFlow = buildSwapFlow("timeout", quote, txpowid);
+    setTransactionFlow(timeoutFlow);
+    setStatus(timeoutFlow.detail);
+    updateRecentSend(txpowid, {
+      status: timeoutFlow.badge,
+      detail: timeoutFlow.detail
+    });
+    setHistoryRefreshToken((current) => current + 1);
+  }
+
+  async function confirmSwap() {
+    if (!pendingSwap) {
+      return;
+    }
+
+    const quote = pendingSwap;
+
+    if (!exchangeAddress) {
+      setPendingSwap(null);
+      setStatus("Swap quote is ready. Add VITE_EXCHANGE_ADDRESS to execute live swaps through MiniMask.");
+      return;
+    }
+
+    if (quote.fromToken !== "MINIMA") {
+      setPendingSwap(null);
+      setStatus("Live execution is currently enabled for MINIMA swap routes. Add token IDs for other assets to enable direct routing.");
+      return;
+    }
+
+    try {
+      const result = await send(quote.amount, exchangeAddress, {
+        state: {
+          0: String(quote.amount),
+          1: quote.fromToken,
+          2: quote.toToken,
+          3: quote.receiveAmount,
+          4: "swap-quote"
+        }
+      });
+      const txpowid = extractTxPowId(result);
+      const submittedFlow = buildSwapFlow("submitted", quote, txpowid);
+
+      saveRecentSend({
+        amount: quote.amount,
+        asset: quote.fromToken,
+        address: `${quote.fromToken} -> ${quote.toToken}`,
+        status: submittedFlow.badge,
+        detail: `${quote.receiveAmount} ${quote.toToken} quoted through exchange route.`,
+        timestamp: Date.now(),
+        id: txpowid || `swap-${Date.now()}`,
+        txpowid: txpowid || ""
+      });
+
+      setTransactionFlow(submittedFlow);
+      setStatus(submittedFlow.detail);
+      setPendingSwap(null);
+      setHistoryRefreshToken((current) => current + 1);
+
+      if (txpowid) {
+        monitorSwapConfirmation(txpowid, quote);
+      } else {
+        setStatus("Swap submitted, but MiniMask did not return a txpowid for confirmation tracking.");
+      }
+    } catch (error) {
+      setStatus(error.message);
+    }
+  }
+
   function handleInstallMiniMask() {
     window.open("https://minimask.org/index.html", "_blank", "noopener,noreferrer");
   }
@@ -187,9 +317,24 @@ export default function Dashboard() {
     setStatus(`Please confirm sending ${sendAmount} Minima to ${sendAddress}.`);
   }
 
+  function handleOpenExchange() {
+    setIsExchangeOpen(true);
+  }
+
+  function handleCloseExchange() {
+    setIsExchangeOpen(false);
+  }
+
+  function handleSwapQuote(quote) {
+    setPendingSwap(quote);
+    setIsExchangeOpen(false);
+    setStatus(`${quote.amount} ${quote.fromToken} = ${quote.receiveAmount} ${quote.toToken}. Proceed with swap?`);
+  }
+
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_420px]">
       <div className="space-y-6">
+        <ExchangeHero onOpen={handleOpenExchange} />
         <ChatBox onIntent={handleIntent} />
         <TransactionHistory
           address={address}
@@ -246,14 +391,25 @@ export default function Dashboard() {
       </div>
 
       <ConfirmModal
-        open={Boolean(pendingTx)}
+        open={Boolean(pendingTx || pendingSwap)}
         message={
-          pendingTx
-            ? `Confirm sending ${pendingTx.amount} Minima to ${pendingTx.address}`
-            : ""
+          pendingSwap
+            ? `Confirm swapping ${pendingSwap.amount} ${pendingSwap.fromToken} for approximately ${pendingSwap.receiveAmount} ${pendingSwap.toToken}?`
+            : pendingTx
+              ? `Confirm sending ${pendingTx.amount} Minima to ${pendingTx.address}`
+              : ""
         }
-        onConfirm={confirmSend}
-        onCancel={() => setPendingTx(null)}
+        onConfirm={pendingSwap ? confirmSwap : confirmSend}
+        onCancel={() => {
+          setPendingTx(null);
+          setPendingSwap(null);
+        }}
+      />
+
+      <ExchangeModal
+        open={isExchangeOpen}
+        onClose={handleCloseExchange}
+        onQuote={handleSwapQuote}
       />
     </div>
   );

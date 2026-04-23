@@ -168,7 +168,7 @@ export function useMiniMask() {
     }
   }, [isInitialized]);
 
-  const send = useCallback(async (amount, recipientAddress) => {
+  const send = useCallback(async (amount, recipientAddress, options = {}) => {
     try {
       if (!MiniMask.isAvailable()) {
         throw new Error(getUnavailableMessage());
@@ -179,7 +179,7 @@ export function useMiniMask() {
         setIsInitialized(true);
       }
 
-      const result = await MiniMask.sendAsync(amount, recipientAddress);
+      const result = await MiniMask.sendAsync(amount, recipientAddress, options);
       setError("");
       return result;
     } catch (currentError) {

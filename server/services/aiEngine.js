@@ -1,4 +1,5 @@
 import { parseIntent } from "./intentParser.js";
+import { buildBestSwapSuggestion, buildSwapQuote, getPriceTable } from "./swapEngine.js";
 import { requireConfirmation, validateTransaction } from "./transactionValidator.js";
 
 export function handleChatMessage(message) {
@@ -28,11 +29,78 @@ export function handleChatMessage(message) {
     };
   }
 
+  if (parsed.intent === "PRICE_LIST") {
+    const priceTable = getPriceTable();
+
+    return {
+      intent: "PRICE_LIST",
+      message: "Current token prices loaded.",
+      reply: priceTable.map((item) => `${item.token} = $${item.price}`).join("\n"),
+      priceTable
+    };
+  }
+
+  if (parsed.intent === "PRICE_QUERY") {
+    const quote = buildSwapQuote(parsed.amount, parsed.fromToken, parsed.toToken);
+
+    if (!quote) {
+      return {
+        intent: "PRICE_QUERY",
+        message: "Unable to generate that quote.",
+        reply: "Unable to generate that quote."
+      };
+    }
+
+    return {
+      intent: "PRICE_QUERY",
+      message: `${quote.amount} ${quote.fromToken} = ${quote.receiveAmount} ${quote.toToken}`,
+      reply: `${quote.amount} ${quote.fromToken} = ${quote.receiveAmount} ${quote.toToken}`,
+      swapQuote: quote
+    };
+  }
+
+  if (parsed.intent === "BEST_SWAP") {
+    const suggestion = buildBestSwapSuggestion(parsed.fromToken);
+
+    if (!suggestion) {
+      return {
+        intent: "BEST_SWAP",
+        message: "I couldn't determine the best swap target.",
+        reply: "I couldn't determine the best swap target."
+      };
+    }
+
+    return {
+      intent: "BEST_SWAP",
+      message: suggestion.reply,
+      reply: suggestion.reply
+    };
+  }
+
   if (parsed.intent === "WALLET_HELP") {
     return {
       intent: "WALLET_HELP",
       message: "For wallet help: connect MiniMask, refresh balances, review the address card, and confirm transfers only after checking the recipient and amount.",
       reply: "For wallet help: connect MiniMask, refresh balances, review the address card, and confirm transfers only after checking the recipient and amount."
+    };
+  }
+
+  if (parsed.intent === "SWAP_QUOTE") {
+    const quote = buildSwapQuote(parsed.amount, parsed.fromToken, parsed.toToken);
+
+    if (!quote) {
+      return {
+        intent: "SWAP_QUOTE",
+        message: "I couldn't build that swap quote.",
+        reply: "I couldn't build that swap quote."
+      };
+    }
+
+    return {
+      intent: "SWAP_QUOTE",
+      message: `${quote.amount} ${quote.fromToken} = ${quote.receiveAmount} ${quote.toToken}`,
+      reply: `${quote.amount} ${quote.fromToken} = ${quote.receiveAmount} ${quote.toToken}\n\nProceed with swap?`,
+      swapQuote: quote
     };
   }
 

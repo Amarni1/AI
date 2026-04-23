@@ -124,3 +124,60 @@ export function buildTransactionFlow(phase, transaction, txpowid = "") {
     detail: "Tracking transaction status."
   };
 }
+
+export function buildSwapFlow(phase, quote, txpowid = "") {
+  const summary = `${quote.amount} ${quote.fromToken} -> ${quote.receiveAmount} ${quote.toToken}`;
+
+  if (phase === "submitted") {
+    return {
+      phase,
+      txpowid,
+      title: "Swap Submitted",
+      badge: "Submitted",
+      summary,
+      detail: "Swap request submitted to MiniMask."
+    };
+  }
+
+  if (phase === "processing") {
+    return {
+      phase,
+      txpowid,
+      title: "Swap Processing",
+      badge: "Processing",
+      summary,
+      detail: "Waiting for swap confirmation on network."
+    };
+  }
+
+  if (phase === "success") {
+    return {
+      phase,
+      txpowid,
+      title: "Swap Successful",
+      badge: "Confirmed",
+      summary,
+      detail: "Confirmed on network."
+    };
+  }
+
+  if (phase === "timeout") {
+    return {
+      phase,
+      txpowid,
+      title: "Swap Confirmation Timeout",
+      badge: "Timed out",
+      summary,
+      detail: "Still waiting for swap confirmation on network."
+    };
+  }
+
+  return {
+    phase,
+    txpowid,
+    title: "Swap Update",
+    badge: "Update",
+    summary,
+    detail: "Tracking swap status."
+  };
+}

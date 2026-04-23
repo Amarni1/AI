@@ -30,7 +30,7 @@ function HistoryCard({ item }) {
             {isSent ? "Sent" : "Received"}
           </p>
           <h3 className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
-            {item.amount} Minima
+            {item.amount} {item.asset || "Minima"}
           </h3>
         </div>
         <span
