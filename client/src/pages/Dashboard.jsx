@@ -21,7 +21,7 @@ import {
 } from "../services/transactionStatus";
 
 export default function Dashboard() {
-  const exchangeAddress = import.meta.env.VITE_EXCHANGE_ADDRESS ?? "";
+  const exchangeAddress = String(import.meta.env.VITE_EXCHANGE_ADDRESS ?? "").trim();
   const [pendingTx, setPendingTx] = useState(null);
   const [pendingSwap, setPendingSwap] = useState(null);
   const [isExchangeOpen, setIsExchangeOpen] = useState(false);
@@ -83,6 +83,17 @@ export default function Dashboard() {
     }
 
     setStatus(result.reply ?? result.message);
+  }
+
+  function setSwapFailure(quote, message) {
+    const failedFlow = {
+      ...buildSwapFlow("failed", quote),
+      detail: message
+    };
+
+    setTransactionFlow(failedFlow);
+    setStatus(message);
+    setPendingSwap(null);
   }
 
   async function monitorTransactionConfirmation(txpowid, transaction) {
@@ -247,38 +258,49 @@ export default function Dashboard() {
     }
 
     const quote = pendingSwap;
+    const routeAddress = exchangeAddress || address;
+    const routeMode = exchangeAddress ? "exchange-route" : "wallet-route";
 
-    if (!exchangeAddress) {
-      setPendingSwap(null);
-      setStatus("Swap quote is ready. Add VITE_EXCHANGE_ADDRESS to execute live swaps through MiniMask.");
+    if (!isAvailable) {
+      setSwapFailure(quote, error || "MiniMask is not available in this browser session.");
       return;
     }
 
-    if (quote.fromToken !== "MINIMA") {
-      setPendingSwap(null);
-      setStatus("Live execution is currently enabled for MINIMA swap routes. Add token IDs for other assets to enable direct routing.");
+    if (!address) {
+      setSwapFailure(quote, "Connect your wallet before starting a swap.");
       return;
     }
 
     try {
-      const result = await send(quote.amount, exchangeAddress, {
+      const submittingFlow = buildSwapFlow("submitting", quote);
+      setTransactionFlow(submittingFlow);
+      setStatus(submittingFlow.detail);
+
+      const result = await send(quote.amount, routeAddress, {
         state: {
-          0: String(quote.amount),
-          1: quote.fromToken,
-          2: quote.toToken,
-          3: quote.receiveAmount,
-          4: "swap-quote"
+          0: quote.fromToken,
+          1: quote.toToken,
+          2: String(quote.amount),
+          3: String(quote.receiveAmount),
+          4: address,
+          5: String(quote.usdValue),
+          6: routeMode
         }
       });
       const txpowid = extractTxPowId(result);
-      const submittedFlow = buildSwapFlow("submitted", quote, txpowid);
+      const submittedFlow = {
+        ...buildSwapFlow("submitted", quote, txpowid),
+        detail: exchangeAddress
+          ? "Swap request submitted to the configured exchange route."
+          : "Swap request submitted through the connected wallet route."
+      };
 
       saveRecentSend({
         amount: quote.amount,
         asset: quote.fromToken,
-        address: `${quote.fromToken} -> ${quote.toToken}`,
+        address: routeAddress,
         status: submittedFlow.badge,
-        detail: `${quote.receiveAmount} ${quote.toToken} quoted through exchange route.`,
+        detail: `${quote.fromToken} -> ${quote.toToken} | Expected ${quote.receiveAmount} ${quote.toToken} | ${exchangeAddress ? "Exchange route active" : "Wallet route fallback active"}`,
         timestamp: Date.now(),
         id: txpowid || `swap-${Date.now()}`,
         txpowid: txpowid || ""
@@ -295,7 +317,7 @@ export default function Dashboard() {
         setStatus("Swap submitted, but MiniMask did not return a txpowid for confirmation tracking.");
       }
     } catch (error) {
-      setStatus(error.message);
+      setSwapFailure(quote, error.message || "Unable to submit swap with MiniMask.");
     }
   }
 

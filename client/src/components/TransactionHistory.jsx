@@ -8,10 +8,14 @@ function HistoryCard({ item }) {
   const statusText = String(item.status || "").toLowerCase();
   const statusClass = statusText.includes("confirm")
     ? "rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+    : statusText.includes("submitting")
+      ? "rounded-full bg-sky-100 px-3 py-1 text-xs font-medium text-sky-700 dark:bg-sky-500/15 dark:text-sky-300"
     : statusText.includes("processing")
       ? "rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
       : statusText.includes("submitted")
         ? "rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-ma-gold dark:bg-white/10"
+        : statusText.includes("failed")
+          ? "rounded-full bg-rose-100 px-3 py-1 text-xs font-medium text-rose-700 dark:bg-rose-500/15 dark:text-rose-300"
         : statusText.includes("timeout")
           ? "rounded-full bg-rose-100 px-3 py-1 text-xs font-medium text-rose-700 dark:bg-rose-500/15 dark:text-rose-300"
           : isSent

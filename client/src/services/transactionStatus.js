@@ -128,6 +128,17 @@ export function buildTransactionFlow(phase, transaction, txpowid = "") {
 export function buildSwapFlow(phase, quote, txpowid = "") {
   const summary = `${quote.amount} ${quote.fromToken} -> ${quote.receiveAmount} ${quote.toToken}`;
 
+  if (phase === "submitting") {
+    return {
+      phase,
+      txpowid,
+      title: "Swap Submitting",
+      badge: "Submitting",
+      summary,
+      detail: "Opening MiniMask and preparing the swap request."
+    };
+  }
+
   if (phase === "submitted") {
     return {
       phase,
@@ -169,6 +180,17 @@ export function buildSwapFlow(phase, quote, txpowid = "") {
       badge: "Timed out",
       summary,
       detail: "Still waiting for swap confirmation on network."
+    };
+  }
+
+  if (phase === "failed") {
+    return {
+      phase,
+      txpowid,
+      title: "Swap Failed",
+      badge: "Failed",
+      summary,
+      detail: "MiniMask could not submit the swap request."
     };
   }
 

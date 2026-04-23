@@ -6,6 +6,10 @@ function getFlowBadgeClass(phase) {
     return "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300";
   }
 
+  if (phase === "submitting") {
+    return "bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300";
+  }
+
   if (phase === "processing") {
     return "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300";
   }
@@ -15,6 +19,10 @@ function getFlowBadgeClass(phase) {
   }
 
   if (phase === "timeout") {
+    return "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300";
+  }
+
+  if (phase === "failed") {
     return "bg-rose-100 text-rose-700 dark:bg-rose-500/15 dark:text-rose-300";
   }
 
@@ -55,7 +63,9 @@ export default function StatusPanel({ connected, status, tokenCount, transaction
                 <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] ${getFlowBadgeClass(transactionFlow.phase)}`}>
                   {transactionFlow.badge}
                 </span>
-                {transactionFlow.phase === "processing" ? <LoadingDots label="Polling chain" /> : null}
+                {transactionFlow.phase === "processing" || transactionFlow.phase === "submitting" ? (
+                  <LoadingDots label={transactionFlow.phase === "submitting" ? "Waiting for MiniMask" : "Polling chain"} />
+                ) : null}
               </div>
               <h3 className="mt-4 font-display text-2xl font-semibold text-slate-900 dark:text-white">
                 {transactionFlow.title}
