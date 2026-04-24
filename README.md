@@ -1,52 +1,52 @@
-# MINIMA AI Treasury Swap DEX
+# MINIMA AI Direct On-Chain Swap DEX
 
-This workspace now runs as a treasury-backed swap dashboard rather than an orderbook DEX.
+This app now runs as a frontend-only MiniMask swap experience.
 
 ## Architecture
 
-1. `client/` contains the premium React swap dashboard
-2. `server/` exposes the AI orchestration and treasury swap API
-3. `client/src/services/minimask.js` is the MiniMask + MEG bridge for wallet access, sendable balances, deposits, and tx checks
-4. `server/routes/swaps.js` handles quotes, swap requests, status polling, and history
+1. `client/` contains the premium React dashboard
+2. MiniMask handles wallet connection, balance reads, signing, and transaction sending
+3. The app builds swap metadata locally and writes it into Minima transaction state variables
+4. The UI polls `checktxpow` directly through MiniMask until the transaction confirms
 
-## Swap Flow
+There is no payout API or required swap backend in the live flow.
 
-1. The user requests a quote
-2. The backend creates a swap request for the treasury route
-3. The frontend sends the source token to the treasury wallet through MiniMask
-4. The backend verifies the deposit tx on-chain
-5. The backend calls the treasury payout service
-6. The UI shows `Submitted -> Processing -> Success` as confirmations arrive
+## Direct On-Chain Flow
+
+1. Connect MiniMask
+2. Read wallet balances and sendable amounts
+3. Build a swap quote locally in the browser
+4. Create a real Minima transaction with swap metadata in the state variables
+5. Sign and send through MiniMask
+6. Show `Submitted -> Processing -> Success` once the txpow confirms
 
 ## Run
 
-Install dependencies at the workspace root, then run:
+Install dependencies at the workspace root, then run the frontend:
 
 ```bash
-npm run dev:server
 npm run dev:client
 ```
 
-Default local URLs:
+Default local URL:
 
 - Frontend: `http://localhost:5173`
-- API: `http://localhost:4000`
+
+The production build still runs from the workspace root with:
+
+```bash
+npm run build
+```
 
 ## Environment
 
-Create a local `.env` from `.env.example`.
+Create a local `.env` from `.env.example` if you want to customize:
 
-Required backend variables for a live swap route:
+- `VITE_SWAP_SIGNAL_AMOUNT`
+- `VITE_SWAP_TOKEN_ID_USDT`
 
-- `TREASURY_ADDRESS`
-- `MINIMA_CHAIN_API_URL`
-- `TREASURY_PAYOUT_URL`
-- token ids for any non-Minima assets you want to settle
+This build is configured for just two tokens: `MINIMA` and `USDT`.
 
-The frontend only needs `VITE_API_URL` when the API is hosted separately from the UI.
+## Important Limitation
 
-## Deployment Notes
-
-- The React frontend can be hosted on Netlify or Vercel
-- The backend must run on a long-lived Node host such as Render, Railway, or Fly.io
-- A real production swap requires a treasury payout service that can submit Minima transactions after deposit verification
+This mode creates real Minima blockchain transactions, but it does not automatically settle the quoted destination token. For a quote like `MINIMA -> USDT` to represent a real token movement, that destination token must already exist on Minima and be referenced by a real token id.

@@ -32,9 +32,9 @@ function getFlowBadgeClass(phase) {
 export default function StatusPanel({ connected, status, tokenCount, transactionFlow }) {
   const cards = [
     {
-      label: "Connection",
-      value: connected ? "Active wallet session" : "Awaiting wallet",
-      accent: connected ? "text-emerald-600 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"
+      label: "Mode",
+      value: "Direct On-Chain Mode",
+      accent: "text-slate-900 dark:text-white"
     },
     {
       label: "Assets",
@@ -42,9 +42,9 @@ export default function StatusPanel({ connected, status, tokenCount, transaction
       accent: "text-slate-900 dark:text-white"
     },
     {
-      label: "Assistant",
-      value: "Ready for treasury swaps, wallet help, and Minima guidance",
-      accent: "text-slate-900 dark:text-white"
+      label: "Connection",
+      value: connected ? "MiniMask connected" : "Awaiting wallet",
+      accent: connected ? "text-emerald-600 dark:text-emerald-300" : "text-amber-700 dark:text-amber-300"
     }
   ];
 
@@ -64,7 +64,7 @@ export default function StatusPanel({ connected, status, tokenCount, transaction
                   {transactionFlow.badge}
                 </span>
                 {transactionFlow.phase === "processing" || transactionFlow.phase === "submitting" ? (
-                  <LoadingDots label={transactionFlow.phase === "submitting" ? "Waiting for MiniMask" : "Polling chain"} />
+                  <LoadingDots label={transactionFlow.phase === "submitting" ? "Waiting for MiniMask" : "Checking txpow"} />
                 ) : null}
               </div>
               <h3 className="mt-4 font-display text-2xl font-semibold text-slate-900 dark:text-white">

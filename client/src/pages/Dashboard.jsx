@@ -53,12 +53,12 @@ export default function Dashboard() {
             <div className="max-w-3xl">
               <p className="section-kicker">Minima AI Swap DEX</p>
               <h2 className="mt-3 font-display text-4xl font-semibold text-slate-900 dark:text-white sm:text-5xl">
-                Real treasury swaps, verified on-chain before reserve payout
+                Direct on-chain swap requests, signed in MiniMask and tracked to confirmation
               </h2>
               <p className="mt-4 text-sm leading-7 text-slate-700 dark:text-slate-200">
-                User deposits are signed in MiniMask, verified through the Minima chain gateway,
-                and only then released from the treasury reserve wallet. No orderbook and no
-                local swap simulation layer.
+                Each request is prepared locally, signed in MiniMask, written to the Minima
+                chain, and tracked client-side until the txpow confirms. No orderbook,
+                payout service, or swap API sits in the live execution path.
               </p>
             </div>
 
@@ -68,9 +68,9 @@ export default function Dashboard() {
                 <p className="mt-3 text-3xl font-extrabold">{dex.availableTokens.length}</p>
               </div>
               <div className="rounded-[24px] border border-[#ecd79a] bg-[#fff7dd] px-5 py-4 text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-white">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-ma-gold">Route</p>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-ma-gold">Mode</p>
                 <p className="mt-3 text-xl font-extrabold">
-                  {dex.config.executionReady ? "Live" : "Config"}
+                  Direct
                 </p>
               </div>
               <div className="rounded-[24px] border border-[#ecd79a] bg-[#fff7dd] px-5 py-4 text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-white">
@@ -91,8 +91,8 @@ export default function Dashboard() {
           previewQuote={dex.previewQuote}
           quote={dex.activeQuote}
           quoteLoading={dex.quoteLoading}
+          routeAddress={dex.config.recipientAddress}
           swapLoading={dex.swapLoading}
-          treasuryAddress={dex.config.treasuryAddress}
         />
 
         <ChatBox onIntent={handleIntent} />

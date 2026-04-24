@@ -17,19 +17,19 @@ function compactAddress(value) {
 export default function ReservePanel({ config }) {
   const badges = [
     {
-      label: "Treasury wallet",
-      ok: Boolean(config.treasuryAddress),
-      value: compactAddress(config.treasuryAddress)
+      label: "Mode",
+      ok: true,
+      value: config.modeLabel || "Direct On-Chain Mode"
     },
     {
-      label: "Chain verification",
-      ok: Boolean(config.chainApiConfigured),
-      value: config.chainApiConfigured ? "Enabled" : "MINIMA_CHAIN_API_URL missing"
+      label: "Signal recipient",
+      ok: Boolean(config.recipientAddress),
+      value: compactAddress(config.recipientAddress)
     },
     {
-      label: "Treasury payout",
-      ok: Boolean(config.payoutEndpointConfigured),
-      value: config.payoutEndpointConfigured ? "Ready" : "TREASURY_PAYOUT_URL missing"
+      label: "Signal amount",
+      ok: Boolean(config.signalAmount),
+      value: config.signalAmount ? `${config.signalAmount} MINIMA` : "Using default signal amount"
     }
   ];
 
@@ -37,20 +37,18 @@ export default function ReservePanel({ config }) {
     <section className="panel-surface p-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="section-kicker">Reserve Model</p>
+          <p className="section-kicker">Direct On-Chain Mode</p>
           <h2 className="mt-2 font-display text-3xl font-semibold text-slate-900 dark:text-white">
-            Treasury routing
+            MiniMask execution profile
           </h2>
         </div>
         <span
           className={[
             "rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.24em]",
-            config.executionReady
-              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
-              : "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300"
+            "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
           ].join(" ")}
         >
-          {config.executionReady ? "Live Route" : "Needs Config"}
+          Client-side flow
         </span>
       </div>
 
@@ -79,11 +77,13 @@ export default function ReservePanel({ config }) {
         ))}
       </div>
 
-      {config.missingConfig?.length ? (
-        <div className="mt-5 rounded-[22px] border border-amber-200 bg-[#fff9e8] px-4 py-4 text-sm text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
-          {config.missingConfig[0]}
-        </div>
-      ) : null}
+      <div className="mt-5 rounded-[22px] border border-slate-200 bg-[#fff9e8] px-4 py-4 text-sm text-slate-800 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
+        {config.message}
+      </div>
+
+      <div className="mt-5 rounded-[22px] border border-amber-200 bg-[#fff9e8] px-4 py-4 text-sm text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+        Tokens without configured ids fall back to metadata-only on-chain requests. Add token ids for both sides to make the signal include the source asset directly.
+      </div>
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {config.tokens?.map((token, index) => (
@@ -99,6 +99,9 @@ export default function ReservePanel({ config }) {
             </p>
             <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
               ${token.price}
+            </p>
+            <p className="mt-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+              {token.configured ? "Token id ready" : "Metadata-only fallback"}
             </p>
             <p className="mt-2 break-all text-xs text-slate-500 dark:text-slate-400">
               {token.tokenId || "Token id not configured"}

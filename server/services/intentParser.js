@@ -130,8 +130,8 @@ export function parseIntent(message) {
 
   if (
     normalized.includes("sendable balance") ||
-    normalized.includes("treasury reserve") ||
-    normalized.includes("payout") ||
+    normalized.includes("direct on-chain") ||
+    normalized.includes("swap metadata") ||
     normalized.includes("swap route") ||
     normalized.includes("dex")
   ) {

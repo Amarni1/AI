@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { api } from "../services/api";
+import { respondToMessage } from "../services/chatEngine";
 import LoadingDots from "./LoadingDots";
 
 const suggestions = [
-  "Swap 5 minima to usdc",
-  "Convert 10 ma to minima",
+  "Swap 5 minima to usdt",
+  "Convert 10 usdt to minima",
   "Show token prices",
   "How much is 25 minima in usdt?"
 ];
@@ -12,7 +12,7 @@ const suggestions = [
 export default function AISwapWidget({ onQuote }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [reply, setReply] = useState("Ask for a quote, prices, or the best token to swap into.");
+  const [reply, setReply] = useState("Ask for a quote, prices, or how Direct On-Chain Mode works.");
   const [quote, setQuote] = useState(null);
   const [priceTable, setPriceTable] = useState([]);
 
@@ -25,7 +25,7 @@ export default function AISwapWidget({ onQuote }) {
     setLoading(true);
     setInput("");
     try {
-      const result = await api.sendMessage(trimmedMessage);
+      const result = await Promise.resolve(respondToMessage(trimmedMessage));
       setReply(result.reply ?? result.message);
       setQuote(result.swapQuote ?? null);
       setPriceTable(result.priceTable ?? []);
@@ -49,7 +49,7 @@ export default function AISwapWidget({ onQuote }) {
         <div>
           <p className="section-kicker">AI Swap</p>
           <h3 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
-            Natural language execution
+            Natural language quoting
           </h3>
         </div>
         <div className="rounded-full bg-[#fff7dd] px-3 py-1 text-xs font-bold uppercase tracking-[0.22em] text-slate-900 dark:bg-ma-gold dark:text-slate-950">
@@ -65,14 +65,14 @@ export default function AISwapWidget({ onQuote }) {
           placeholder="Swap 10 minima to usdt"
         />
         <button type="submit" disabled={loading} className="btn-gold w-full justify-center disabled:pointer-events-none disabled:opacity-60">
-          {loading ? "Thinking..." : "Execute AI Swap"}
+          {loading ? "Thinking..." : "Generate AI Quote"}
         </button>
       </form>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {suggestions.map((suggestion) => (
-          <button
-            key={suggestion}
+      {suggestions.map((suggestion) => (
+        <button
+          key={suggestion}
             type="button"
             onClick={() => runPrompt(suggestion)}
             className="rounded-full border border-black/10 bg-white px-3 py-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-700 transition hover:-translate-y-0.5 hover:border-ma-gold hover:text-ma-gold dark:border-white/10 dark:bg-slate-950 dark:text-slate-200"

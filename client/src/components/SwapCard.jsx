@@ -4,7 +4,7 @@ function compactAddress(value) {
   const safeValue = String(value || "");
 
   if (!safeValue) {
-    return "Unavailable";
+    return "Connect MiniMask";
   }
 
   if (safeValue.length <= 18) {
@@ -24,12 +24,15 @@ export default function SwapCard({
   previewQuote,
   quote,
   quoteLoading,
-  swapLoading,
-  treasuryAddress
+  routeAddress,
+  swapLoading
 }) {
-  const routeNote = quote?.executionReady
-    ? "Treasury route ready for on-chain execution."
-    : quote?.missingConfig?.[0] || "Execution depends on treasury and token-id configuration.";
+  const activeQuote = quote || previewQuote;
+  const routeNote = !activeQuote
+    ? "Enter an amount to preview the on-chain signal."
+    : activeQuote.metadataOnly
+      ? "Metadata-only signal. Configure token ids for both assets to include the source token directly."
+      : "Token-aware signal ready for MiniMask signing.";
 
   return (
     <motion.section
@@ -41,16 +44,17 @@ export default function SwapCard({
       <div className="relative">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="section-kicker">Treasury Swap</p>
+            <p className="section-kicker">Direct Swap</p>
             <h2 className="mt-2 font-display text-4xl font-semibold text-slate-900 dark:text-white">
-              Real reserve route
+              Sign a real on-chain swap request
             </h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-700 dark:text-slate-200">
-              Deposit with MiniMask, verify the tx on-chain, then release the treasury payout.
+              Sign in MiniMask, embed the quote in Minima state variables, and track the txpow
+              until the network confirms it.
             </p>
           </div>
           <div className="rounded-full bg-slate-950 px-4 py-2 text-xs font-bold uppercase tracking-[0.28em] text-ma-gold dark:bg-ma-gold dark:text-slate-950">
-            Uniswap-style UX
+            Local quote + chain confirmation
           </div>
         </div>
 
@@ -62,7 +66,7 @@ export default function SwapCard({
                   From
                 </p>
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-ma-gold">
-                  Treasury deposit
+                  Swap input
                 </p>
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_150px]">
@@ -95,7 +99,7 @@ export default function SwapCard({
                 onClick={onFlip}
                 className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-[#e5c76f] bg-[linear-gradient(180deg,#fdf1b8_0%,#e0ba43_45%,#a87910_100%)] text-2xl font-black text-slate-950 shadow-[0_18px_30px_rgba(212,175,55,0.3)] transition hover:-translate-y-1"
               >
-                ↕
+                {"><"}
               </button>
             </div>
 
@@ -105,7 +109,7 @@ export default function SwapCard({
                   To
                 </p>
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-ma-gold">
-                  Treasury payout
+                  Quoted output
                 </p>
               </div>
               <div className="mt-4 grid gap-4 sm:grid-cols-[minmax(0,1fr)_150px]">
@@ -137,10 +141,10 @@ export default function SwapCard({
               </div>
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/45">
-                  Treasury wallet
+                  Signal recipient
                 </p>
                 <p className="mt-2 text-sm font-semibold text-white">
-                  {compactAddress(treasuryAddress)}
+                  {compactAddress(routeAddress)}
                 </p>
               </div>
               <div>
@@ -160,11 +164,11 @@ export default function SwapCard({
               className="btn-gold mt-5 w-full justify-center disabled:pointer-events-none disabled:opacity-60"
             >
               {swapLoading
-                ? "Submitting Swap"
+                ? "Submitting Request"
                 : quoteLoading
                   ? "Preparing Quote"
                   : connected
-                    ? "Swap With MiniMask"
+                    ? "Sign Swap Request"
                     : "Connect Wallet First"}
             </button>
           </div>

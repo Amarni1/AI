@@ -8,6 +8,7 @@ import LoadingDots from "./LoadingDots";
 
 function HistoryCard({ item }) {
   const statusText = String(item.status || "").toLowerCase();
+  const txReference = item.txpowid || item.depositTxpowid || item.payoutTxpowid || "";
   const statusClass = statusText.includes("confirm") || statusText.includes("success")
     ? "rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
     : statusText.includes("submitting")
@@ -30,7 +31,7 @@ function HistoryCard({ item }) {
     >
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-ma-gold">Treasury Swap</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-ma-gold">Direct Swap</p>
           <h3 className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
             {formatSwapHistorySummary(item)}
           </h3>
@@ -47,16 +48,14 @@ function HistoryCard({ item }) {
           Wallet: {compactHash(item.walletAddress)}
         </p>
         <p className="rounded-[18px] bg-[#fffaf0] px-4 py-3 dark:bg-white/5">
-          Treasury: {compactHash(item.treasuryAddress)}
+          Recipient: {compactHash(item.recipientAddress || item.walletAddress)}
         </p>
-        {item.depositTxpowid ? (
+        <p className="rounded-[18px] bg-[#fffaf0] px-4 py-3 dark:bg-white/5">
+          Signal: {item.metadataOnly ? "Metadata-only request" : "Token-aware request"}
+        </p>
+        {txReference ? (
           <p className="rounded-[18px] bg-[#fffaf0] px-4 py-3 dark:bg-white/5">
-            Deposit Tx: {compactHash(item.depositTxpowid)}
-          </p>
-        ) : null}
-        {item.payoutTxpowid ? (
-          <p className="rounded-[18px] bg-[#fffaf0] px-4 py-3 dark:bg-white/5">
-            Payout Tx: {compactHash(item.payoutTxpowid)}
+            TxPow: {compactHash(txReference)}
           </p>
         ) : null}
         {item.statusDetail ? <p>{item.statusDetail}</p> : null}
@@ -78,7 +77,7 @@ export default function TransactionHistory({ items = [], loading = false, error 
             Swap Activity
           </h2>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
-            Treasury-routed swap deposits and payouts with live timestamps and tx references.
+            Direct on-chain swap requests and confirmations with live timestamps and tx references.
           </p>
         </div>
         {loading ? (
@@ -112,7 +111,7 @@ export default function TransactionHistory({ items = [], loading = false, error 
         <div className="mt-6 rounded-[24px] border border-dashed border-ma-gold/40 bg-[#fffaf0] p-8 text-center dark:bg-white/5">
           <p className="text-lg font-semibold text-slate-900 dark:text-white">No swaps yet</p>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-300">
-            Submitted treasury swaps will appear here after you sign them in MiniMask.
+            Submitted on-chain swap requests will appear here after you sign them in MiniMask.
           </p>
         </div>
       ) : null}

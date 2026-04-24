@@ -1,14 +1,14 @@
 import { startTransition, useEffect, useRef, useState } from "react";
-import { api } from "../services/api";
+import { respondToMessage } from "../services/chatEngine";
 import LoadingDots from "./LoadingDots";
 
 const quickPrompts = [
   "Hello MA",
   "Swap 10 minima to usdt",
-  "Convert 25 lucos to ma",
-  "How much is 15 ma in minima?",
+  "How much is 25 minima in usdt?",
+  "How much is 20 usdt in minima?",
   "What is sendable balance?",
-  "How does the treasury swap route work?",
+  "How does direct on-chain mode work?",
   "Show token prices"
 ];
 
@@ -19,7 +19,7 @@ export default function ChatBox({ onIntent }) {
   const [messages, setMessages] = useState([
     {
       role: "ai",
-      text: "Welcome to Minima AI Swap DEX. I can quote treasury swaps, explain sendable balances, guide MiniMask actions, and answer Minima questions."
+      text: "Welcome to Minima AI Swap DEX. I can quote direct on-chain swap requests, explain sendable balances, guide MiniMask actions, and answer Minima questions."
     }
   ]);
 
@@ -41,7 +41,7 @@ export default function ChatBox({ onIntent }) {
     setInput("");
     setLoading(true);
     try {
-      const result = await api.sendMessage(trimmedMessage);
+      const result = await Promise.resolve(respondToMessage(trimmedMessage));
       startTransition(() => {
         setMessages((current) => [
           ...current,
@@ -70,10 +70,10 @@ export default function ChatBox({ onIntent }) {
           <div>
             <p className="section-kicker">MA Concierge</p>
             <h2 className="mt-2 font-display text-3xl font-semibold text-slate-900 dark:text-white">
-              AI trade assistant
+              AI swap assistant
             </h2>
             <p className="mt-2 text-sm font-medium text-slate-600 dark:text-slate-300">
-              Ask naturally about swap routes, token prices, sendable balances, wallet setup, or Minima fundamentals.
+              Ask naturally about direct on-chain swap requests, token prices, sendable balances, wallet setup, or Minima fundamentals.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -137,7 +137,7 @@ export default function ChatBox({ onIntent }) {
             <textarea
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder="Ask for swap quotes, treasury-route help, token prices, or wallet guidance..."
+              placeholder="Ask for swap quotes, direct on-chain help, token prices, or wallet guidance..."
               className="min-h-28 w-full resize-none bg-transparent px-2 py-2 text-base font-semibold text-slate-950 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
             />
             <div className="mt-3 flex justify-end">

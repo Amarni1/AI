@@ -14,19 +14,19 @@ export default function Transactions() {
   return (
     <div className="space-y-6">
       <section className="panel-surface p-6">
-        <p className="section-kicker">Transaction Safety</p>
+        <p className="section-kicker">Confirmation Flow</p>
         <h2 className="mt-3 font-display text-3xl font-semibold text-slate-900 dark:text-white">
-          Treasury verification workflow
+          Direct on-chain verification workflow
         </h2>
         <div className="mt-6 grid gap-4">
           <div className="surface-muted p-4 text-slate-700 dark:text-slate-200">
-            Every swap deposit is signed in MiniMask before the backend touches treasury funds.
+            Every swap request is signed locally in MiniMask and submitted from your browser.
           </div>
           <div className="surface-muted p-4 text-slate-700 dark:text-slate-200">
-            The backend verifies the deposit on-chain before requesting the reserve payout.
+            The app polls the Minima chain with `checktxpow` until the tx confirms or times out.
           </div>
           <div className="surface-muted p-4 text-slate-700 dark:text-slate-200">
-            Success is only shown after the payout transaction is confirmed on the network.
+            Quote metadata is recorded on-chain in state variables, so the request can be reviewed without any backend service.
           </div>
         </div>
       </section>

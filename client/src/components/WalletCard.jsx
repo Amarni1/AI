@@ -52,8 +52,8 @@ export default function WalletCard({
               MiniMask control center
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600 dark:text-slate-300">
-              Securely inspect sendable balances, refresh wallet data, and prepare treasury
-              deposits for MiniMask confirmation.
+              Securely inspect sendable balances, refresh wallet data, and prepare direct
+              on-chain swap signals for MiniMask confirmation.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

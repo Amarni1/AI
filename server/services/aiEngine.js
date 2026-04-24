@@ -12,8 +12,8 @@ export function handleChatMessage(message) {
   if (parsed.intent === "GREETING") {
     return {
       intent: "GREETING",
-      message: "Welcome to Minima AI Swap DEX. I can quote treasury swaps, guide MiniMask actions, explain sendable balances, and help with Minima concepts.",
-      reply: "Welcome to Minima AI Swap DEX. I can quote treasury swaps, guide MiniMask actions, explain sendable balances, and help with Minima concepts."
+      message: "Welcome to Minima AI Swap DEX. I can quote direct on-chain swap requests, guide MiniMask actions, explain sendable balances, and help with Minima concepts.",
+      reply: "Welcome to Minima AI Swap DEX. I can quote direct on-chain swap requests, guide MiniMask actions, explain sendable balances, and help with Minima concepts."
     };
   }
 
@@ -92,8 +92,8 @@ export function handleChatMessage(message) {
   if (parsed.intent === "DEX_HELP") {
     return {
       intent: "DEX_HELP",
-      message: "This swap DEX uses a treasury reserve model. You send the source token to the treasury wallet through MiniMask, the backend verifies the deposit on-chain, and only then does the treasury release the destination token back to your wallet.",
-      reply: "This swap DEX uses a treasury reserve model. You sign the deposit in MiniMask, the backend verifies that exact txpow on-chain, and only then does the treasury submit the payout transaction. Sendable balance means the confirmed amount your wallet can actually spend right now."
+      message: "This swap DEX uses Direct On-Chain Mode. MiniMask signs the transaction locally, the swap quote is embedded in the state variables, and the UI tracks confirmation directly from the Minima chain.",
+      reply: "This swap DEX uses Direct On-Chain Mode. MiniMask signs the transaction locally, the quote is stored in the state variables, and the UI tracks confirmation directly from the Minima chain. Sendable balance means the confirmed amount your wallet can actually spend right now."
     };
   }
 
@@ -111,7 +111,7 @@ export function handleChatMessage(message) {
     return {
       intent: "SWAP_QUOTE",
       message: `${quote.amount} ${quote.fromToken} = ${quote.receiveAmount} ${quote.toToken}`,
-      reply: `${quote.amount} ${quote.fromToken} = ${quote.receiveAmount} ${quote.toToken}\n\nSign the deposit in MiniMask when you're ready and I will route it through the treasury verifier.`,
+      reply: `${quote.amount} ${quote.fromToken} = ${quote.receiveAmount} ${quote.toToken}\n\nSign the direct on-chain request in MiniMask when you're ready.`,
       swapQuote: quote
     };
   }
@@ -127,8 +127,8 @@ export function handleChatMessage(message) {
   if (parsed.intent === "HELP") {
     return {
       intent: "HELP",
-      message: "I can help with swap quotes, treasury-route execution, sendable balances, wallet setup, Minima education, and core blockchain concepts.",
-      reply: "I can help with swap quotes, treasury-route execution, sendable balances, wallet setup, Minima education, and core blockchain concepts."
+      message: "I can help with swap quotes, direct on-chain execution, sendable balances, wallet setup, Minima education, and core blockchain concepts.",
+      reply: "I can help with swap quotes, direct on-chain execution, sendable balances, wallet setup, Minima education, and core blockchain concepts."
     };
   }
 
