@@ -130,6 +130,7 @@ export function useDexOrderBook({
   const socketRef = useRef(null);
   const reconnectTimerRef = useRef(null);
   const confirmedTradesRef = useRef(new Set());
+  const shouldReconnectRef = useRef(true);
   const [clientId, setClientId] = useState("");
   const [connectionState, setConnectionState] = useState("connecting");
   const [status, setStatus] = useState("Connecting to the live DEX relay.");
@@ -399,6 +400,10 @@ export function useDexOrderBook({
       setConnectionState("connecting");
 
       socket.onopen = () => {
+        if (socketRef.current !== socket) {
+          return;
+        }
+
         setConnectionState("connected");
         setStatus("Live DEX relay connected.");
 
@@ -468,19 +473,35 @@ export function useDexOrderBook({
       };
 
       socket.onclose = () => {
+        if (socketRef.current !== socket) {
+          return;
+        }
+
+        socketRef.current = null;
+
+        if (!shouldReconnectRef.current) {
+          return;
+        }
+
         setConnectionState("reconnecting");
         setStatus("DEX relay disconnected. Reconnecting...");
         reconnectTimerRef.current = window.setTimeout(connect, 2000);
       };
 
       socket.onerror = () => {
+        if (socketRef.current !== socket) {
+          return;
+        }
+
         setError("DEX relay connection failed.");
       };
     };
 
+    shouldReconnectRef.current = true;
     connect();
 
     return () => {
+      shouldReconnectRef.current = false;
       window.clearTimeout(reconnectTimerRef.current);
 
       if (socketRef.current) {
@@ -488,7 +509,7 @@ export function useDexOrderBook({
         socketRef.current = null;
       }
     };
-  }, [address]);
+  }, []);
 
   useEffect(() => {
     if (connectionState !== "connected" || !socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {

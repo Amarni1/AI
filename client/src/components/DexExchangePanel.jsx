@@ -14,6 +14,22 @@ function formatPrice(value) {
   return Number.isFinite(numeric) ? `$${numeric.toFixed(4)}` : "$0.0000";
 }
 
+function formatRelayState(connectionState) {
+  if (connectionState === "connected") {
+    return "Relay live";
+  }
+
+  if (connectionState === "connecting") {
+    return "Relay connecting";
+  }
+
+  if (connectionState === "offline") {
+    return "Relay offline";
+  }
+
+  return "Relay reconnecting";
+}
+
 function OrderRow({ actionLabel, onAction, order, ownOrder }) {
   const remaining = Number(order.remaining || 0);
   const total = Number((remaining * Number(order.price || 0)).toFixed(4));
@@ -157,8 +173,29 @@ export default function DexExchangePanel({
               </p>
             </div>
 
-            <div className="rounded-full bg-emerald-400/10 px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.24em] text-emerald-300">
-              {connectionState === "connected" ? "Relay live" : "Reconnecting"}
+            <div className="flex flex-wrap items-center gap-2">
+              <div
+                className={[
+                  "rounded-full px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.24em]",
+                  connected
+                    ? "bg-emerald-400/10 text-emerald-300"
+                    : "bg-white/10 text-white/65"
+                ].join(" ")}
+              >
+                {connected ? "Wallet connected" : "Wallet idle"}
+              </div>
+              <div
+                className={[
+                  "rounded-full px-4 py-2 text-[11px] font-extrabold uppercase tracking-[0.24em]",
+                  connectionState === "connected"
+                    ? "bg-emerald-400/10 text-emerald-300"
+                    : connectionState === "offline"
+                      ? "bg-rose-400/10 text-rose-200"
+                      : "bg-amber-400/10 text-amber-100"
+                ].join(" ")}
+              >
+                {formatRelayState(connectionState)}
+              </div>
             </div>
           </div>
 
