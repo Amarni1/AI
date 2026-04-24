@@ -5,6 +5,7 @@ import ExchangeModal from "../components/ExchangeModal";
 import StatusPanel from "../components/StatusPanel";
 import TransactionHistory from "../components/TransactionHistory";
 import WalletCard from "../components/WalletCard";
+import { useDexOrderBook } from "../hooks/useDexOrderBook";
 import { useMiniMask } from "../hooks/useMiniMask";
 import { usePortalInsights } from "../hooks/usePortalInsights";
 import { useSwapDex } from "../hooks/useSwapDex";
@@ -37,6 +38,11 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
     address,
     marketPrices: insights.prices,
     refreshWallet: refresh,
+    send,
+    sendableBalances
+  });
+  const dexBook = useDexOrderBook({
+    address,
     send,
     sendableBalances
   });
@@ -286,6 +292,11 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
         blockLoading={insights.blockLoading}
         blockNumber={insights.blockNumber}
         connected={Boolean(address)}
+        dexBook={{
+          ...dexBook,
+          connected: Boolean(address),
+          walletAddress: address
+        }}
         form={dex.form}
         marketPrices={insights.prices}
         mode={widgetMode}

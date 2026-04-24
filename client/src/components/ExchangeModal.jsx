@@ -1,7 +1,10 @@
 import { AnimatePresence, motion } from "framer-motion";
+import DexExchangePanel from "./DexExchangePanel";
 import SwapCard from "./SwapCard";
 
 export default function ExchangeModal({
+  dexBook,
+  mode,
   open,
   onClose,
   ...swapCardProps
@@ -27,7 +30,7 @@ export default function ExchangeModal({
               </button>
             </div>
 
-            <SwapCard {...swapCardProps} />
+            {mode === "exchange" ? <DexExchangePanel {...dexBook} /> : <SwapCard {...swapCardProps} />}
           </motion.div>
         </motion.div>
       ) : null}

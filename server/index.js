@@ -1,8 +1,10 @@
+import http from "node:http";
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import chatRouter from "./routes/chat.js";
 import walletRouter from "./routes/wallet.js";
+import { attachDexRelay } from "./services/dexRelay.js";
 import { apiRateLimit } from "./middleware/rateLimit.js";
 import { requestLogger } from "./middleware/requestLogger.js";
 
@@ -26,6 +28,9 @@ app.get("/health", (_request, response) => {
 app.use("/api/chat", chatRouter);
 app.use("/api/wallet", walletRouter);
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+attachDexRelay(server);
+
+server.listen(PORT, () => {
   console.log(`MA orchestrator listening on port ${PORT}`);
 });
