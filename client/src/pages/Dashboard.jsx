@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ChatBox from "../components/ChatBox";
 import ExchangeModal from "../components/ExchangeModal";
 import StatusPanel from "../components/StatusPanel";
@@ -12,7 +12,7 @@ import {
   sortBalancesByOwnership
 } from "../services/walletPortfolio";
 
-export default function Dashboard() {
+export default function Dashboard({ exchangeLaunchRequest = 0 }) {
   const [widgetMode, setWidgetMode] = useState("exchange");
   const [exchangeOpen, setExchangeOpen] = useState(false);
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
@@ -104,6 +104,14 @@ export default function Dashboard() {
     setExchangeOpen(true);
   }
 
+  useEffect(() => {
+    if (!exchangeLaunchRequest) {
+      return;
+    }
+
+    openExchange("exchange");
+  }, [exchangeLaunchRequest]);
+
   return (
     <>
       <div className="space-y-6">
@@ -120,7 +128,7 @@ export default function Dashboard() {
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-4 lg:items-end">
+            <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-[24px] border border-[#ecd79a] bg-[#fff7dd] px-5 py-4 text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-white">
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-ma-gold">Owned</p>
                 <p className="mt-3 text-3xl font-extrabold">{ownedTokenBalances.length}</p>
@@ -132,11 +140,6 @@ export default function Dashboard() {
               <div className="rounded-[24px] border border-[#ecd79a] bg-[#fff7dd] px-5 py-4 text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-white">
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-ma-gold">USDT</p>
                 <p className="mt-3 text-xl font-extrabold">{insights.priceCards[1]?.value}</p>
-              </div>
-              <div className="flex items-end">
-                <button onClick={() => openExchange("exchange")} className="btn-gold w-full justify-center">
-                  Exchange
-                </button>
               </div>
             </div>
           </div>

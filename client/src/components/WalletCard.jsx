@@ -63,10 +63,10 @@ export default function WalletCard({
           <div className="flex flex-wrap gap-3">
             <button
               onClick={onConnect}
-              disabled={!isAvailable || isSyncing}
+              disabled={!isAvailable || isSyncing || connected}
               className="btn-gold disabled:pointer-events-none disabled:opacity-60"
             >
-              {isChecking ? "Detecting..." : connected ? "Reconnect" : "Connect Wallet"}
+              {isChecking ? "Detecting..." : connected ? "Connected" : "Connect Wallet"}
             </button>
             <button
               onClick={onRefresh}

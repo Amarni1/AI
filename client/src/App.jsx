@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import { useState } from "react";
 import Dashboard from "./pages/Dashboard";
 import Wallet from "./pages/Wallet";
 import Transactions from "./pages/Transactions";
@@ -7,6 +8,11 @@ import { useTheme } from "./hooks/useTheme";
 
 export default function App() {
   const { isDark, toggleTheme } = useTheme();
+  const [exchangeLaunchRequest, setExchangeLaunchRequest] = useState(0);
+
+  function handleOpenExchange() {
+    setExchangeLaunchRequest((current) => current + 1);
+  }
 
   return (
     <div className="min-h-screen bg-halo text-slate-900 dark:text-white">
@@ -17,10 +23,14 @@ export default function App() {
       </div>
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[92rem] flex-col px-4 py-6 sm:px-6 lg:px-8">
-        <Navbar isDark={isDark} onToggleTheme={toggleTheme} />
+        <Navbar
+          isDark={isDark}
+          onOpenExchange={handleOpenExchange}
+          onToggleTheme={toggleTheme}
+        />
         <main className="flex-1">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Dashboard exchangeLaunchRequest={exchangeLaunchRequest} />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/transactions" element={<Transactions />} />
           </Routes>

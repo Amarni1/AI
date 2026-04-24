@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import ThemeToggle from "./ThemeToggle";
 
@@ -8,7 +8,14 @@ const navItems = [
   { to: "/transactions", label: "History" }
 ];
 
-export default function Navbar({ isDark, onToggleTheme }) {
+export default function Navbar({ isDark, onOpenExchange, onToggleTheme }) {
+  const navigate = useNavigate();
+
+  function handleOpenExchange() {
+    navigate("/");
+    onOpenExchange?.();
+  }
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -18 }}
@@ -45,6 +52,9 @@ export default function Navbar({ isDark, onToggleTheme }) {
           </div>
 
           <nav className="flex flex-wrap gap-3">
+            <button type="button" onClick={handleOpenExchange} className="btn-secondary">
+              Exchange
+            </button>
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
