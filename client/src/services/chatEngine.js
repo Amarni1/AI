@@ -98,6 +98,28 @@ export function respondToMessage(message, context = {}) {
 
   const swapQuote = parseSwapQuote(safeMessage, walletAddress, prices);
   if (swapQuote) {
+    if (walletAddress) {
+      const sourceBalance = getTokenSendableBalance(sendableBalances, swapQuote.fromToken);
+
+      if (sourceBalance <= 0 && Number(swapQuote.amount) > 0) {
+        return {
+          intent: "ZERO_BALANCE_MODE",
+          reply:
+            `No sendable ${swapQuote.fromToken} is available right now. ` +
+            `Only a zero-value command is allowed, for example: "Swap 0 ${swapQuote.fromToken.toLowerCase()} to ${swapQuote.toToken.toLowerCase()}".`
+        };
+      }
+
+      if (Number(swapQuote.amount) > sourceBalance) {
+        return {
+          intent: "BALANCE_LIMIT",
+          reply:
+            `You only have ${formatDisplayedAmount(sourceBalance)} ${swapQuote.fromToken} sendable. ` +
+            "Use an amount less than or equal to that balance."
+        };
+      }
+    }
+
     return {
       intent: "SWAP_QUOTE",
       reply:
@@ -137,8 +159,10 @@ export function respondToMessage(message, context = {}) {
     const sendableBalance = getTokenSendableBalance(sendableBalances, sendDraft.token);
     if (sendableBalance <= 0) {
       return {
-        intent: "SEND_HELP",
-        reply: `You do not have any sendable ${sendDraft.token} right now. Refresh MiniMask and try again.`
+        intent: "ZERO_BALANCE_MODE",
+        reply:
+          `No sendable ${sendDraft.token} is available right now. ` +
+          `Only a zero-value command is allowed, for example: "Send 0 ${sendDraft.token.toLowerCase()} to ${sendDraft.address}".`
       };
     }
 
@@ -270,6 +294,18 @@ export function respondToMessage(message, context = {}) {
         ownedTokens.length > 0
           ? `Yes, you currently have ${getPortfolioSummary(sendableBalances)} available to sign from.`
           : "No sendable balance is available right now. Only zero-value actions are allowed."
+    };
+  }
+
+  if (
+    normalized.includes("no sendable balance detected") ||
+    normalized.includes("zero balance mode") ||
+    normalized.includes("zero-value command")
+  ) {
+    return {
+      intent: "ZERO_BALANCE_MODE",
+      reply:
+        "Zero-balance mode is active when MiniMask reports no sendable funds. In that state, only commands using amount 0 are allowed, such as 'Send 0 minima to Mx...' or 'Swap 0 minima to usdt'."
     };
   }
 

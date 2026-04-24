@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { useState } from "react";
 import Dashboard from "./pages/Dashboard";
+import Settings from "./pages/Settings";
 import Wallet from "./pages/Wallet";
 import Transactions from "./pages/Transactions";
 import Navbar from "./components/Navbar";
@@ -31,6 +32,7 @@ export default function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Dashboard exchangeLaunchRequest={exchangeLaunchRequest} />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/wallet" element={<Wallet />} />
             <Route path="/transactions" element={<Transactions />} />
           </Routes>

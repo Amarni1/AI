@@ -55,6 +55,29 @@ html.dark body {
     @apply inline-flex items-center rounded-full border border-black/10 bg-[linear-gradient(180deg,#ffffff_0%,#f3f4f6_100%)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.18em] text-slate-800 shadow-[0_16px_26px_rgba(15,23,42,0.08),0_7px_0_rgba(203,213,225,0.92)] transition duration-200 hover:-translate-y-0.5 hover:border-ma-gold hover:text-ma-gold hover:shadow-[0_18px_30px_rgba(15,23,42,0.12),0_8px_0_rgba(203,213,225,0.95)] active:translate-y-[2px] active:shadow-[0_10px_18px_rgba(15,23,42,0.08),0_4px_0_rgba(203,213,225,0.95)] dark:border-white/10 dark:bg-[linear-gradient(180deg,#111827_0%,#020617_100%)] dark:text-slate-100 dark:shadow-[0_16px_26px_rgba(0,0,0,0.35),0_7px_0_rgba(15,23,42,0.95)] dark:hover:border-ma-gold;
   }
 
+  .btn-nav-dormant {
+    @apply inline-flex items-center rounded-full border border-black/10 bg-[linear-gradient(180deg,#ffffff_0%,#f3f4f6_100%)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.18em] text-slate-800 shadow-[0_16px_26px_rgba(15,23,42,0.08),0_7px_0_rgba(203,213,225,0.92)] transition duration-200 dark:border-white/10 dark:bg-[linear-gradient(180deg,#111827_0%,#020617_100%)] dark:text-slate-100 dark:shadow-[0_16px_26px_rgba(0,0,0,0.35),0_7px_0_rgba(15,23,42,0.95)];
+  }
+
+  .btn-nav-dormant:hover {
+    border-color: #8b6b10;
+    background: linear-gradient(180deg, #fff4c6 0%, #f1cf67 18%, #d4af37 52%, #94680a 100%);
+    color: #0f172a;
+    box-shadow:
+      0 24px 44px rgba(212, 175, 55, 0.42),
+      0 10px 0 rgba(123, 86, 12, 0.82),
+      inset 0 1px 1px rgba(255, 255, 255, 0.92);
+    transform: translateY(-4px);
+  }
+
+  .btn-nav-dormant:active {
+    transform: translateY(2px);
+    box-shadow:
+      0 14px 24px rgba(212, 175, 55, 0.25),
+      0 5px 0 rgba(123, 86, 12, 0.92),
+      inset 0 1px 1px rgba(255, 255, 255, 0.72);
+  }
+
   .input-premium {
     @apply w-full rounded-[22px] border border-black/10 bg-white px-4 py-3 text-slate-950 font-semibold outline-none transition focus:border-ma-gold focus:ring-2 focus:ring-ma-gold/20 dark:border-white/10 dark:bg-slate-900 dark:text-white dark:placeholder:text-slate-400;
   }

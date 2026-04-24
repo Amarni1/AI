@@ -29,7 +29,9 @@ function BlockBadge({ blockLoading, blockNumber }) {
   return (
     <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-emerald-200">
       <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(74,222,128,0.9)]" />
-      {blockNumber !== null ? `Minima Network • Block #${blockNumber}` : "Minima Network • Awaiting block"}
+      {blockNumber !== null
+        ? `Minima Network - Block #${blockNumber}`
+        : "Minima Network - Awaiting block"}
     </div>
   );
 }
@@ -63,12 +65,13 @@ export default function SwapCard({
   walletLoading,
   zeroBalanceWarning
 }) {
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [exchangeConfirmOpen, setExchangeConfirmOpen] = useState(false);
+  const [swapConfirmOpen, setSwapConfirmOpen] = useState(false);
   const activeQuote = quote || previewQuote;
   const ownedTokens = getOwnedTokenBalances(tokenBalances).slice(0, 3);
   const isSwapMode = mode === "swap";
 
-  const confirmDetails = useMemo(() => {
+  const swapConfirmDetails = useMemo(() => {
     if (!activeQuote) {
       return [];
     }
@@ -86,9 +89,30 @@ export default function SwapCard({
     ];
   }, [activeQuote]);
 
+  const exchangeConfirmDetails = useMemo(() => {
+    if (!sendForm.address || String(sendForm.amount ?? "").trim() === "") {
+      return [];
+    }
+
+    return [
+      { label: "Asset", value: sendForm.token },
+      { label: "Amount", value: `${sendForm.amount} ${sendForm.token}` },
+      { label: "Recipient", value: sendForm.address },
+      {
+        label: "Available",
+        value: `${formatDisplayedAmount(sendSourceBalance)} ${sendForm.token}`
+      }
+    ];
+  }, [sendForm.address, sendForm.amount, sendForm.token, sendSourceBalance]);
+
   async function handleConfirmSwap() {
-    setConfirmOpen(false);
+    setSwapConfirmOpen(false);
     await onExecuteSwap();
+  }
+
+  async function handleConfirmExchange() {
+    setExchangeConfirmOpen(false);
+    await onExecuteExchange();
   }
 
   return (
@@ -149,13 +173,17 @@ export default function SwapCard({
                 <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-white/45">
                   MINIMA
                 </p>
-                <p className="mt-2 text-lg font-black text-white">{formatUsdPrice(marketPrices.MINIMA)}</p>
+                <p className="mt-2 text-lg font-black text-white">
+                  {formatUsdPrice(marketPrices.MINIMA)}
+                </p>
               </div>
               <div className="rounded-[22px] border border-white/10 bg-white/5 px-4 py-3">
                 <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-white/45">
                   USDT
                 </p>
-                <p className="mt-2 text-lg font-black text-white">{formatUsdPrice(marketPrices.USDT)}</p>
+                <p className="mt-2 text-lg font-black text-white">
+                  {formatUsdPrice(marketPrices.USDT)}
+                </p>
               </div>
             </div>
 
@@ -262,7 +290,7 @@ export default function SwapCard({
 
                 <button
                   type="button"
-                  onClick={() => setConfirmOpen(true)}
+                  onClick={() => setSwapConfirmOpen(true)}
                   disabled={swapLoading || quoteLoading || Boolean(swapDisabledReason)}
                   className="btn-gold w-full justify-center disabled:pointer-events-none disabled:opacity-60"
                 >
@@ -330,14 +358,14 @@ export default function SwapCard({
 
                 <button
                   type="button"
-                  onClick={onExecuteExchange}
+                  onClick={() => setExchangeConfirmOpen(true)}
                   disabled={sendLoading || Boolean(sendDisabledReason)}
                   className="btn-gold w-full justify-center disabled:pointer-events-none disabled:opacity-60"
                 >
                   {sendLoading
                     ? "Submitting..."
                     : connected
-                      ? "Exchange in MiniMask"
+                      ? "Confirm Exchange"
                       : "Connect Wallet"}
                 </button>
               </div>
@@ -349,12 +377,31 @@ export default function SwapCard({
       <ConfirmModal
         confirmLabel="Confirm"
         description="Review this swap request before MiniMask opens."
-        details={confirmDetails}
-        message={activeQuote ? `${activeQuote.amount} ${activeQuote.fromToken} -> ${activeQuote.receiveAmount} ${activeQuote.toToken}` : ""}
-        onCancel={() => setConfirmOpen(false)}
+        details={swapConfirmDetails}
+        message={
+          activeQuote
+            ? `${activeQuote.amount} ${activeQuote.fromToken} -> ${activeQuote.receiveAmount} ${activeQuote.toToken}`
+            : ""
+        }
+        onCancel={() => setSwapConfirmOpen(false)}
         onConfirm={handleConfirmSwap}
-        open={confirmOpen}
+        open={swapConfirmOpen}
         title="Confirm Swap"
+      />
+
+      <ConfirmModal
+        confirmLabel="Confirm"
+        description="Review this exchange transaction before MiniMask opens."
+        details={exchangeConfirmDetails}
+        message={
+          sendForm.address
+            ? `${sendForm.amount || "0"} ${sendForm.token} will be sent to ${sendForm.address}.`
+            : ""
+        }
+        onCancel={() => setExchangeConfirmOpen(false)}
+        onConfirm={handleConfirmExchange}
+        open={exchangeConfirmOpen}
+        title="Confirm Exchange"
       />
     </>
   );

@@ -5,7 +5,8 @@ import ThemeToggle from "./ThemeToggle";
 const navItems = [
   { to: "/", label: "Dashboard" },
   { to: "/wallet", label: "Wallet" },
-  { to: "/transactions", label: "History" }
+  { to: "/transactions", label: "History" },
+  { to: "/settings", label: "Settings" }
 ];
 
 export default function Navbar({ isDark, onOpenExchange, onToggleTheme }) {
@@ -52,7 +53,7 @@ export default function Navbar({ isDark, onOpenExchange, onToggleTheme }) {
           </div>
 
           <nav className="flex flex-wrap gap-3">
-            <button type="button" onClick={handleOpenExchange} className="btn-secondary">
+            <button type="button" onClick={handleOpenExchange} className="btn-nav-dormant">
               Exchange
             </button>
             {navItems.map((item) => (
@@ -62,7 +63,7 @@ export default function Navbar({ isDark, onOpenExchange, onToggleTheme }) {
                 className={({ isActive }) =>
                   isActive
                     ? "btn-gold"
-                    : "btn-secondary"
+                    : "btn-nav-dormant"
                 }
               >
                 {item.label}

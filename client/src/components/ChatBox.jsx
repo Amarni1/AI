@@ -41,6 +41,20 @@ export default function ChatBox({ onIntent, walletContext = {} }) {
       : `Connected to ${formatWalletAddress(walletContext.walletAddress)} with zero sendable balance`
     : "Connect MiniMask to unlock live wallet balances, prices, blocks, and settlement actions.";
 
+  const commandPrompts = useMemo(() => {
+    if (!ownedTokens.length) {
+      return [
+        "Show my wallet",
+        "No sendable balance detected",
+        "Send 0 minima to Mx123",
+        "Swap 0 minima to usdt",
+        "Open exchange"
+      ];
+    }
+
+    return quickPrompts;
+  }, [ownedTokens.length]);
+
   useEffect(() => {
     if (chatBodyRef.current) {
       chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
@@ -97,7 +111,7 @@ export default function ChatBox({ onIntent, walletContext = {} }) {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {quickPrompts.slice(0, 3).map((prompt) => (
+            {commandPrompts.slice(0, 3).map((prompt) => (
               <button
                 key={prompt}
                 type="button"
@@ -144,7 +158,7 @@ export default function ChatBox({ onIntent, walletContext = {} }) {
       >
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
           <div className="flex flex-wrap gap-2">
-            {quickPrompts.map((prompt) => (
+            {commandPrompts.map((prompt) => (
               <button
                 key={prompt}
                 type="button"
