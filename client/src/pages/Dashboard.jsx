@@ -50,6 +50,21 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
     [sendableBalances]
   );
   const hasSpendableFunds = ownedTokenBalances.length > 0;
+  const marketCards = useMemo(
+    () => [
+      {
+        label: "Owned",
+        value: ownedTokenBalances.length,
+        meta: "Sendable assets"
+      },
+      ...insights.priceCards.map((item) => ({
+        label: item.label,
+        value: item.value,
+        meta: "CoinGecko live"
+      }))
+    ],
+    [insights.priceCards, ownedTokenBalances.length]
+  );
   const aiSendConfirmationDetails = useMemo(() => {
     if (!aiSendConfirmation) {
       return [];
@@ -175,18 +190,43 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
               </p>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-[24px] border border-[#ecd79a] bg-[#fff7dd] px-5 py-4 text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-white">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-ma-gold">Owned</p>
-                <p className="mt-3 text-3xl font-extrabold">{ownedTokenBalances.length}</p>
+            <div className="w-full xl:max-w-[620px]">
+              <div className="mb-3 flex items-center justify-between px-1">
+                <p className="text-[11px] font-extrabold uppercase tracking-[0.28em] text-ma-gold">
+                  Live Market
+                </p>
+                <div className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.24em] text-emerald-600 dark:text-emerald-300">
+                  <span className="relative flex h-3 w-3">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.9)]" />
+                  </span>
+                  Live feed
+                </div>
               </div>
-              <div className="rounded-[24px] border border-[#ecd79a] bg-[#fff7dd] px-5 py-4 text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-white">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-ma-gold">MINIMA</p>
-                <p className="mt-3 text-xl font-extrabold">{insights.priceCards[0]?.value}</p>
-              </div>
-              <div className="rounded-[24px] border border-[#ecd79a] bg-[#fff7dd] px-5 py-4 text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-white">
-                <p className="text-xs font-bold uppercase tracking-[0.22em] text-ma-gold">USDT</p>
-                <p className="mt-3 text-xl font-extrabold">{insights.priceCards[1]?.value}</p>
+
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                {marketCards.map((card) => (
+                  <div
+                    key={card.label}
+                    className="rounded-[24px] border border-[#ecd79a] bg-[#fff7dd] px-5 py-4 text-slate-900 dark:border-white/10 dark:bg-slate-900 dark:text-white"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-bold uppercase tracking-[0.22em] text-ma-gold">
+                        {card.label}
+                      </p>
+                      {card.label !== "Owned" ? (
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                        </span>
+                      ) : null}
+                    </div>
+                    <p className="mt-3 text-xl font-extrabold sm:text-2xl">{card.value}</p>
+                    <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
+                      {card.meta}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

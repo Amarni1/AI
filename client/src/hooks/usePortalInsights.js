@@ -94,8 +94,11 @@ export function usePortalInsights({ isMiniMaskAvailable }) {
 
   const priceCards = useMemo(
     () => [
-      { label: "MINIMA", value: formatUsdPrice(prices.MINIMA), numeric: prices.MINIMA },
-      { label: "USDT", value: formatUsdPrice(prices.USDT), numeric: prices.USDT }
+      { label: "MINIMA", value: formatUsdPrice(prices.MINIMA), numeric: prices.MINIMA, source: "CoinGecko" },
+      { label: "USDT", value: formatUsdPrice(prices.USDT), numeric: prices.USDT, source: "CoinGecko" },
+      { label: "ETH", value: formatUsdPrice(prices.ETH), numeric: prices.ETH, source: "CoinGecko" },
+      { label: "BTC", value: formatUsdPrice(prices.BTC), numeric: prices.BTC, source: "CoinGecko" },
+      { label: "SOL", value: formatUsdPrice(prices.SOL), numeric: prices.SOL, source: "CoinGecko" }
     ],
     [prices]
   );
