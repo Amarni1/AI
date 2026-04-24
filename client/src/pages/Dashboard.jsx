@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import ChatBox from "../components/ChatBox";
+import ConfirmModal from "../components/ConfirmModal";
 import ExchangeModal from "../components/ExchangeModal";
 import StatusPanel from "../components/StatusPanel";
 import TransactionHistory from "../components/TransactionHistory";
@@ -7,6 +8,7 @@ import WalletCard from "../components/WalletCard";
 import { useMiniMask } from "../hooks/useMiniMask";
 import { usePortalInsights } from "../hooks/usePortalInsights";
 import { useSwapDex } from "../hooks/useSwapDex";
+import { getTokenId } from "../services/swapEngine";
 import {
   getOwnedTokenBalances,
   sortBalancesByOwnership
@@ -15,6 +17,7 @@ import {
 export default function Dashboard({ exchangeLaunchRequest = 0 }) {
   const [widgetMode, setWidgetMode] = useState("exchange");
   const [exchangeOpen, setExchangeOpen] = useState(false);
+  const [aiSendConfirmation, setAiSendConfirmation] = useState(null);
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const {
     address,
@@ -47,6 +50,26 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
     [sendableBalances]
   );
   const hasSpendableFunds = ownedTokenBalances.length > 0;
+  const aiSendConfirmationDetails = useMemo(() => {
+    if (!aiSendConfirmation) {
+      return [];
+    }
+
+    return [
+      {
+        label: "Amount",
+        value: `${aiSendConfirmation.amount} ${aiSendConfirmation.token}`
+      },
+      {
+        label: "Recipient",
+        value: aiSendConfirmation.address
+      },
+      {
+        label: "Token ID",
+        value: aiSendConfirmation.tokenId
+      }
+    ];
+  }, [aiSendConfirmation]);
 
   async function connectWallet() {
     try {
@@ -90,9 +113,33 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
 
     if (result.sendDraft) {
       setWidgetMode("exchange");
-      setExchangeOpen(true);
       dex.applyAiSend(result.sendDraft);
+      setAiSendConfirmation({
+        address: result.sendDraft.address,
+        amount: String(result.sendDraft.amount ?? "0"),
+        token: result.sendDraft.token || "MINIMA",
+        tokenId: getTokenId(result.sendDraft.token || "MINIMA") || "0x00"
+      });
     }
+  }
+
+  async function handleConfirmAiSend() {
+    if (!aiSendConfirmation) {
+      return;
+    }
+
+    const nextTransaction = aiSendConfirmation;
+    setAiSendConfirmation(null);
+
+    try {
+      await dex.executeSend(nextTransaction);
+    } catch {
+      // The shared send engine already exposes the failure state.
+    }
+  }
+
+  function handleCancelAiSend() {
+    setAiSendConfirmation(null);
   }
 
   function handleInstallMiniMask() {
@@ -224,6 +271,17 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
         walletAddress={address}
         walletLoading={isChecking || isSyncing}
         zeroBalanceWarning={dex.zeroBalanceWarning}
+      />
+
+      <ConfirmModal
+        confirmLabel="Confirm"
+        description="Review this MiniMask transaction before signing."
+        details={aiSendConfirmationDetails}
+        message="MiniMask will open after you confirm this transaction."
+        onCancel={handleCancelAiSend}
+        onConfirm={handleConfirmAiSend}
+        open={Boolean(aiSendConfirmation)}
+        title="Confirm Transaction"
       />
     </>
   );

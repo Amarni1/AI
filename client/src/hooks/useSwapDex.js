@@ -120,6 +120,14 @@ function getSendDisabledReason({ address, amount, recipientAddress, sourceBalanc
   return "";
 }
 
+function normalizeSendTransaction(input, fallbackToken = "MINIMA") {
+  return {
+    address: String(input?.address || "").trim(),
+    amount: String(input?.amount ?? ""),
+    token: input?.token || fallbackToken
+  };
+}
+
 function buildFlow(type, phase, payload, txpowid = "") {
   return type === "send"
     ? buildTransactionFlow(phase, payload, txpowid)
@@ -463,23 +471,27 @@ export function useSwapDex({
     swapDisabledReason
   ]);
 
-  const executeSend = useCallback(async () => {
-    const nextTransaction = {
-      address: sendForm.address.trim(),
-      amount: String(sendForm.amount || ""),
-      token: sendForm.token
-    };
+  const executeSend = useCallback(async (transactionOverride = null) => {
+    const nextTransaction = normalizeSendTransaction(transactionOverride || sendForm, sendForm.token);
+    const nextSourceBalance = getTokenSendableBalance(sendableBalances, nextTransaction.token);
+    const nextSendDisabledReason = getSendDisabledReason({
+      address,
+      amount: nextTransaction.amount,
+      recipientAddress: nextTransaction.address,
+      sourceBalance: nextSourceBalance,
+      token: nextTransaction.token
+    });
 
     setSendLoading(true);
     setHistoryError("");
 
     try {
-      if (sendDisabledReason) {
-        throw new Error(sendDisabledReason);
+      if (nextSendDisabledReason) {
+        throw new Error(nextSendDisabledReason);
       }
 
       setTransactionFlow(buildFlow("send", "submitting", nextTransaction));
-      setStatus("Opening MiniMask to sign the wallet send.");
+      setStatus("Preparing transaction in MiniMask.");
 
       const sendResult = await send(nextTransaction.amount, nextTransaction.address, {
         state: {
@@ -531,7 +543,7 @@ export function useSwapDex({
     } finally {
       setSendLoading(false);
     }
-  }, [address, beginPolling, refreshWallet, send, sendDisabledReason, sendForm.address, sendForm.amount, sendForm.token]);
+  }, [address, beginPolling, refreshWallet, send, sendForm, sendableBalances]);
 
   const applyAiQuote = useCallback((nextQuote) => {
     if (!nextQuote) {

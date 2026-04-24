@@ -70,13 +70,14 @@ function parseBestSwap(message) {
 
 function parseSendDraft(message) {
   const match = message.match(
-    /(?:send|transfer)\s+(\d+(\.\d+)?)\s+([a-z]+)\s+to\s+([a-z0-9]+)/i
+    /(?:send|transfer)\s+(zero|\d+(\.\d+)?)\s+([a-z]+)\s+to\s+([a-z0-9]+)/i
   );
 
   if (!match) {
     return null;
   }
 
+  const amount = match[1].toLowerCase() === "zero" ? "0" : match[1];
   const token = normalizeTokenSymbol(match[3]);
   if (!token) {
     return null;
@@ -84,7 +85,7 @@ function parseSendDraft(message) {
 
   return {
     address: match[4],
-    amount: match[1],
+    amount,
     token
   };
 }
@@ -157,29 +158,26 @@ export function respondToMessage(message, context = {}) {
     }
 
     const sendableBalance = getTokenSendableBalance(sendableBalances, sendDraft.token);
-    if (sendableBalance <= 0) {
+    if (sendableBalance <= 0 && Number(sendDraft.amount) > 0) {
       return {
-        intent: "ZERO_BALANCE_MODE",
-        reply:
-          `No sendable ${sendDraft.token} is available right now. ` +
-          `Only a zero-value command is allowed, for example: "Send 0 ${sendDraft.token.toLowerCase()} to ${sendDraft.address}".`
+        intent: "BALANCE_LIMIT",
+        reply: "Insufficient sendable balance."
       };
     }
 
     if (Number(sendDraft.amount) > sendableBalance) {
       return {
-        intent: "SEND_HELP",
+        intent: "BALANCE_LIMIT",
         reply:
-          `You only have ${formatDisplayedAmount(sendableBalance)} ${sendDraft.token} sendable. ` +
-          "Lower the amount or refresh your wallet data."
+          `Insufficient sendable balance. You only have ${formatDisplayedAmount(sendableBalance)} ${sendDraft.token} sendable.`
       };
     }
 
     return {
       intent: "SEND",
       reply:
-        `I staged a MiniMask send for ${sendDraft.amount} ${sendDraft.token} to ` +
-        `${formatWalletAddress(sendDraft.address)}. Review it in the action card and sign when ready.`,
+        `I prepared a MiniMask send for ${sendDraft.amount} ${sendDraft.token} to ` +
+        `${formatWalletAddress(sendDraft.address)}. Review the confirmation prompt and sign when ready.`,
       sendDraft
     };
   }

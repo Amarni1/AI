@@ -60,11 +60,7 @@ export default function Navbar({ isDark, onOpenExchange, onToggleTheme }) {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) =>
-                  isActive
-                    ? "btn-gold"
-                    : "btn-nav-dormant"
-                }
+                className="btn-nav-dormant"
               >
                 {item.label}
               </NavLink>

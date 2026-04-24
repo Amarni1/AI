@@ -78,8 +78,8 @@ export function buildTransactionFlow(phase, transaction, txpowid = "") {
     return {
       phase,
       txpowid,
-      title: "Preparing Transaction",
-      badge: "Signing",
+      title: "Preparing...",
+      badge: "Preparing...",
       summary,
       detail: "Opening MiniMask for signature approval."
     };
@@ -89,8 +89,8 @@ export function buildTransactionFlow(phase, transaction, txpowid = "") {
     return {
       phase,
       txpowid,
-      title: "Transaction Submitted",
-      badge: "Submitted",
+      title: "Submitted...",
+      badge: "Submitted...",
       summary,
       detail: "Send request submitted to MiniMask."
     };
@@ -100,8 +100,8 @@ export function buildTransactionFlow(phase, transaction, txpowid = "") {
     return {
       phase,
       txpowid,
-      title: "Transaction Processing",
-      badge: "Processing",
+      title: "Processing...",
+      badge: "Processing...",
       summary,
       detail: "Waiting for network confirmation."
     };
@@ -111,8 +111,8 @@ export function buildTransactionFlow(phase, transaction, txpowid = "") {
     return {
       phase,
       txpowid,
-      title: "Transaction Successful",
-      badge: "Confirmed",
+      title: "Success ✅",
+      badge: "Success ✅",
       summary,
       detail: "Confirmed on network."
     };
@@ -133,8 +133,8 @@ export function buildTransactionFlow(phase, transaction, txpowid = "") {
     return {
       phase,
       txpowid,
-      title: "Transaction Failed",
-      badge: "Failed",
+      title: "Failed ❌",
+      badge: "Failed ❌",
       summary,
       detail: "MiniMask could not submit the transaction."
     };
