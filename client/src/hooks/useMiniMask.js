@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { buildWalletScript } from "../services/dexEngine";
 import { MiniMask } from "../services/minimask";
 import {
   buildFallbackSendableBalances,
@@ -31,6 +32,9 @@ export function useMiniMask() {
   const [balance, setBalance] = useState("");
   const [tokenBalances, setTokenBalances] = useState([]);
   const [sendableBalances, setSendableBalances] = useState([]);
+  const [fullBalance, setFullBalance] = useState(null);
+  const [publicKey, setPublicKey] = useState("");
+  const [walletScript, setWalletScript] = useState("");
   const [error, setError] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -117,14 +121,15 @@ export function useMiniMask() {
       throw new Error("Unable to fetch wallet address.");
     }
 
-    const [nextBalance, fullBalance] = await Promise.all([
+    const [nextBalance, nextFullBalance, nextPublicKey] = await Promise.all([
       MiniMask.balanceAsync(),
-      MiniMask.balanceFullAsync(nextAddress, 3, true, true).catch(() => null)
+      MiniMask.balanceFullAsync(nextAddress, 3, true, true).catch(() => null),
+      MiniMask.getPublicKeyAsync().catch(() => "")
     ]);
 
     const normalizedBalances = normalizeTokenBalances(nextBalance);
-    const normalizedSendable = fullBalance
-      ? normalizeSendableBalances(fullBalance)
+    const normalizedSendable = nextFullBalance
+      ? normalizeSendableBalances(nextFullBalance)
       : buildFallbackSendableBalances(normalizedBalances);
     const primaryBalance =
       normalizedSendable.find((item) => item.symbol === "MINIMA")?.sendable ||
@@ -132,17 +137,25 @@ export function useMiniMask() {
       normalizedBalances[0]?.amount ||
       String(nextBalance ?? "");
 
+    const nextScript = buildWalletScript(nextPublicKey);
+
     setAddress(String(nextAddress ?? ""));
     setTokenBalances(normalizedBalances);
     setSendableBalances(normalizedSendable);
+    setFullBalance(nextFullBalance);
+    setPublicKey(String(nextPublicKey || ""));
+    setWalletScript(nextScript);
     setBalance(primaryBalance);
     setError("");
 
     return {
       address: String(nextAddress ?? ""),
       balance: primaryBalance,
+      fullBalance: nextFullBalance,
+      publicKey: String(nextPublicKey || ""),
       sendableBalances: normalizedSendable,
-      tokenBalances: normalizedBalances
+      tokenBalances: normalizedBalances,
+      walletScript: nextScript
     };
   }, [isInitialized]);
 
@@ -218,6 +231,7 @@ export function useMiniMask() {
     balance,
     connect,
     error,
+    fullBalance,
     isInitialized,
     isSyncing,
     installLabel: isChecking ? "Checking for MiniMask..." : "Install MiniMask",
@@ -225,9 +239,11 @@ export function useMiniMask() {
     isChecking,
     isReady,
     loadCoins,
+    publicKey,
     refresh,
     send,
     sendableBalances,
-    tokenBalances
+    tokenBalances,
+    walletScript
   };
 }

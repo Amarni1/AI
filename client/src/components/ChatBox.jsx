@@ -7,13 +7,12 @@ import LoadingDots from "./LoadingDots";
 const quickPrompts = [
   "Show my wallet",
   "Refresh balances",
-  "What is Minima price?",
-  "Show latest block",
-  "Swap 5 minima to usdt",
+  "Buy 5 minima",
+  "Sell 10 MA",
+  "Show best ask",
+  "Cancel orders",
   "Send 2 minima to Mx123",
-  "Do I have enough balance?",
-  "List my tokens",
-  "Open exchange"
+  "List my tokens"
 ];
 
 export default function ChatBox({ onIntent, walletContext = {} }) {
@@ -24,7 +23,7 @@ export default function ChatBox({ onIntent, walletContext = {} }) {
     {
       role: "assistant",
       text:
-        "Welcome to the Minima Finance Portal. I can surface live balances, token availability, Minima pricing, network block data, and stage secure wallet actions for MiniMask."
+        "Welcome to the Minima Finance Portal. I can surface live balances, list tokens, read the live orderbook, place DEX buy or sell orders, cancel open orders, and stage secure MiniMask actions."
     }
   ]);
 
@@ -47,7 +46,7 @@ export default function ChatBox({ onIntent, walletContext = {} }) {
         "Show my wallet",
         "No sendable balance detected",
         "Send 0 minima to Mx123",
-        "Swap 0 minima to usdt",
+        "Show best ask",
         "Open exchange"
       ];
     }
@@ -174,7 +173,7 @@ export default function ChatBox({ onIntent, walletContext = {} }) {
             <textarea
               value={input}
               onChange={(event) => setInput(event.target.value)}
-              placeholder="Ask about wallet balances, token prices, Minima blocks, swaps, sends, or refresh actions..."
+              placeholder="Ask about balances, best ask, buy or sell orders, secure sends, or refresh actions..."
               className="min-h-28 w-full resize-none bg-transparent px-2 py-2 text-base font-bold text-slate-950 outline-none placeholder:text-slate-400 dark:text-white dark:placeholder:text-slate-500"
             />
             <div className="mt-3 flex justify-end">

@@ -10,7 +10,12 @@ function compactStatusText(value) {
 export function extractTxPowId(result) {
   return (
     result?.txpowid ||
+    result?.txpow?.txpowid ||
+    result?.data?.txpow?.txpowid ||
+    result?.data?.txpowid ||
     result?.response?.txpowid ||
+    result?.response?.txpow?.txpowid ||
+    result?.response?.data?.txpow?.txpowid ||
     result?.response?.id ||
     result?.id ||
     ""

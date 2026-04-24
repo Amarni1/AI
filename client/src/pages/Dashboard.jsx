@@ -25,13 +25,16 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
     balance,
     connect,
     error,
+    fullBalance,
     isAvailable,
     isChecking,
     isSyncing,
+    publicKey,
     refresh,
     send,
     sendableBalances,
-    tokenBalances
+    tokenBalances,
+    walletScript
   } = useMiniMask();
   const insights = usePortalInsights({ isMiniMaskAvailable: isAvailable });
   const dex = useSwapDex({
@@ -43,8 +46,12 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
   });
   const dexBook = useDexOrderBook({
     address,
-    send,
-    sendableBalances
+    fullBalance,
+    marketPrices: insights.prices,
+    publicKey,
+    refreshWallet: refresh,
+    sendableBalances,
+    walletScript
   });
 
   const displayedTokenBalances = useMemo(
@@ -118,7 +125,7 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
 
   function handleIntent(result) {
     if (result.openMode) {
-      setWidgetMode(result.openMode);
+      setWidgetMode("exchange");
       setExchangeOpen(true);
     }
 
@@ -126,10 +133,20 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
       void refreshEverything();
     }
 
-    if (result.swapQuote) {
-      setWidgetMode("swap");
+    if (result.dexAction?.type === "PLACE_ORDER" && result.dexAction.order) {
+      setWidgetMode("exchange");
       setExchangeOpen(true);
-      dex.applyAiQuote(result.swapQuote);
+      void dexBook.placeAiOrder(result.dexAction.order).catch(() => {
+        // Live DEX errors are already surfaced in the panel state.
+      });
+    }
+
+    if (result.dexAction?.type === "CANCEL_ALL") {
+      setWidgetMode("exchange");
+      setExchangeOpen(true);
+      void dexBook.cancelAllOrders().catch(() => {
+        // Relay state already exposes the failure.
+      });
     }
 
     if (result.sendDraft) {
@@ -244,6 +261,7 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
               onIntent={handleIntent}
               walletContext={{
                 blockNumber: insights.blockNumber,
+                dexContext: dexBook.aiContext,
                 prices: insights.prices,
                 sendableBalances,
                 walletAddress: address
@@ -279,7 +297,7 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
               status={
                 error && !isAvailable
                   ? error
-                  : insights.blockError || insights.priceError || dex.status
+                  : insights.blockError || insights.priceError || dexBook.status || dex.status
               }
               transactionFlow={dex.transactionFlow}
             />
@@ -288,40 +306,13 @@ export default function Dashboard({ exchangeLaunchRequest = 0 }) {
       </div>
 
       <ExchangeModal
-        availableTokens={dex.availableTokens}
-        blockLoading={insights.blockLoading}
-        blockNumber={insights.blockNumber}
-        connected={Boolean(address)}
         dexBook={{
           ...dexBook,
           connected: Boolean(address),
           walletAddress: address
         }}
-        form={dex.form}
-        marketPrices={insights.prices}
-        mode={widgetMode}
         onClose={() => setExchangeOpen(false)}
-        onExecuteExchange={dex.executeSend}
-        onExecuteSwap={dex.executeSwap}
-        onFlip={dex.flipTokens}
-        onModeChange={setWidgetMode}
-        onSetField={dex.setField}
-        onSetSendField={dex.setSendField}
         open={exchangeOpen}
-        previewQuote={dex.previewQuote}
-        quote={dex.activeQuote}
-        quoteLoading={dex.quoteLoading}
-        sendDisabledReason={dex.sendDisabledReason}
-        sendForm={dex.sendForm}
-        sendLoading={dex.sendLoading}
-        sendSourceBalance={dex.sendSourceBalance}
-        sourceBalance={dex.sourceBalance}
-        swapDisabledReason={dex.swapDisabledReason}
-        swapLoading={dex.swapLoading}
-        tokenBalances={displayedTokenBalances}
-        walletAddress={address}
-        walletLoading={isChecking || isSyncing}
-        zeroBalanceWarning={dex.zeroBalanceWarning}
       />
 
       <ConfirmModal

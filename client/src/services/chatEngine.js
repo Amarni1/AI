@@ -1,10 +1,4 @@
-import {
-  buildBestSwapSuggestion,
-  buildDirectModeConfig,
-  buildDirectSwapQuote,
-  getTokenPriceCards,
-  normalizeTokenSymbol
-} from "./swapEngine";
+import { getTokenPriceCards } from "./swapEngine";
 import {
   formatDisplayedAmount,
   getOwnedTokenBalances,
@@ -17,10 +11,19 @@ function sanitizeMessage(message) {
   return String(message || "").replace(/[<>]/g, "").trim();
 }
 
+function normalizeToken(token) {
+  return String(token || "").trim().toUpperCase();
+}
+
 function resolveContext(context = {}) {
   if (typeof context === "string") {
     return {
       blockNumber: null,
+      dexContext: {
+        availableTokens: [],
+        currentMarket: { baseToken: "MINIMA", quoteToken: "USDT" },
+        marketSummaries: []
+      },
       prices: {},
       sendableBalances: [],
       walletAddress: context
@@ -29,43 +32,28 @@ function resolveContext(context = {}) {
 
   return {
     blockNumber: context?.blockNumber ?? null,
+    dexContext: context?.dexContext || {
+      availableTokens: [],
+      currentMarket: { baseToken: "MINIMA", quoteToken: "USDT" },
+      marketSummaries: []
+    },
     prices: context?.prices || {},
     sendableBalances: context?.sendableBalances || [],
     walletAddress: context?.walletAddress || context?.address || ""
   };
 }
 
-function parseSwapQuote(message, walletAddress = "", prices = {}) {
-  const match = message.match(
-    /(?:swap|convert|trade|exchange)\s+(\d+(\.\d+)?)\s+([a-z]+)\s+(?:to|for|into)\s+([a-z]+)/i
+function findMarketSummary(dexContext, baseToken, quoteToken) {
+  const safeBase = normalizeToken(baseToken) || normalizeToken(dexContext?.currentMarket?.baseToken) || "MINIMA";
+  const safeQuote =
+    normalizeToken(quoteToken) || normalizeToken(dexContext?.currentMarket?.quoteToken) || "USDT";
+
+  return (
+    dexContext?.marketSummaries?.find(
+      (market) =>
+        normalizeToken(market.baseToken) === safeBase && normalizeToken(market.quoteToken) === safeQuote
+    ) || null
   );
-
-  if (!match) {
-    return null;
-  }
-
-  return buildDirectSwapQuote(match[1], match[3], match[4], walletAddress, prices);
-}
-
-function parsePriceQuery(message, walletAddress = "", prices = {}) {
-  const match = message.match(
-    /(?:how much is|what is|quote)\s+(\d+(\.\d+)?)\s+([a-z]+)\s+(?:in|to)\s+([a-z]+)/i
-  );
-
-  if (!match) {
-    return null;
-  }
-
-  return buildDirectSwapQuote(match[1], match[3], match[4], walletAddress, prices);
-}
-
-function parseBestSwap(message) {
-  const match = message.match(/best token to swap\s+([a-z]+)\s+into/i);
-  if (!match) {
-    return null;
-  }
-
-  return normalizeTokenSymbol(match[1]);
 }
 
 function parseSendDraft(message) {
@@ -77,74 +65,153 @@ function parseSendDraft(message) {
     return null;
   }
 
-  const amount = match[1].toLowerCase() === "zero" ? "0" : match[1];
-  const token = normalizeTokenSymbol(match[3]);
-  if (!token) {
+  return {
+    address: match[4],
+    amount: match[1].toLowerCase() === "zero" ? "0" : match[1],
+    token: normalizeToken(match[3])
+  };
+}
+
+function parseDexOrder(message, dexContext) {
+  const match = message.match(
+    /\b(buy|sell)\s+(\d+(\.\d+)?)\s+([a-z0-9]+)(?:\s+(?:for|with|against|vs)\s+([a-z0-9]+))?(?:\s+at\s+(\d+(\.\d+)?))?/i
+  );
+
+  if (!match) {
     return null;
   }
 
+  const side = match[1].toLowerCase();
+  const quantity = match[2];
+  const baseToken = normalizeToken(match[4]);
+  const quoteToken = normalizeToken(match[5]) || normalizeToken(dexContext?.currentMarket?.quoteToken) || "USDT";
+  const explicitPrice = match[6] ? String(match[6]) : "";
+  const market = findMarketSummary(dexContext, baseToken, quoteToken);
+
+  if (!explicitPrice) {
+    if (side === "buy") {
+      if (!market?.bestAsk) {
+        return {
+          intent: "DEX_INFO",
+          reply:
+            `No live best ask is available for ${baseToken}/${quoteToken}. ` +
+            `Say "buy ${quantity} ${baseToken.toLowerCase()} at 0.5000 ${quoteToken.toLowerCase()}" to post a bid instead.`
+        };
+      }
+
+      return {
+        intent: "DEX_ORDER",
+        dexAction: {
+          order: {
+            baseToken,
+            price: String(market.bestAsk),
+            quantity,
+            quoteToken,
+            side
+          },
+          type: "PLACE_ORDER"
+        },
+        reply:
+          `Placing a live BUY order for ${quantity} ${baseToken} on ${baseToken}/${quoteToken} ` +
+          `at the current best ask of $${Number(market.bestAsk).toFixed(4)}. ` +
+          "Any unfilled remainder will stay on the book."
+      };
+    }
+
+    if (!market?.bestBid) {
+      return {
+        intent: "DEX_INFO",
+        reply:
+          `No live best bid is available for ${baseToken}/${quoteToken}. ` +
+          `Say "sell ${quantity} ${baseToken.toLowerCase()} at 0.5000 ${quoteToken.toLowerCase()}" to post an ask instead.`
+      };
+    }
+
+    return {
+      intent: "DEX_ORDER",
+      dexAction: {
+        order: {
+          baseToken,
+          price: String(market.bestBid),
+          quantity,
+          quoteToken,
+          side
+        },
+        type: "PLACE_ORDER"
+      },
+      reply:
+        `Placing a live SELL order for ${quantity} ${baseToken} on ${baseToken}/${quoteToken} ` +
+        `at the current best bid of $${Number(market.bestBid).toFixed(4)}. ` +
+        "Any unfilled remainder will stay on the book."
+    };
+  }
+
   return {
-    address: match[4],
-    amount,
-    token
+    intent: "DEX_ORDER",
+    dexAction: {
+      order: {
+        baseToken,
+        price: explicitPrice,
+        quantity,
+        quoteToken,
+        side
+      },
+      type: "PLACE_ORDER"
+    },
+    reply:
+      `Placing a live ${side.toUpperCase()} order for ${quantity} ${baseToken} on ${baseToken}/${quoteToken} ` +
+      `at $${Number(explicitPrice).toFixed(4)}.`
+  };
+}
+
+function parseBestAsk(message, dexContext) {
+  if (!/best ask/i.test(message)) {
+    return null;
+  }
+
+  const tokenMatch = message.match(/best ask(?:\s+for)?\s+([a-z0-9]+)(?:\/([a-z0-9]+))?/i);
+  const baseToken = normalizeToken(tokenMatch?.[1] || dexContext?.currentMarket?.baseToken || "MINIMA");
+  const quoteToken = normalizeToken(tokenMatch?.[2] || dexContext?.currentMarket?.quoteToken || "USDT");
+  const market = findMarketSummary(dexContext, baseToken, quoteToken);
+
+  if (!market?.bestAsk) {
+    return {
+      intent: "DEX_INFO",
+      reply: `There is no live ask on ${baseToken}/${quoteToken} right now.`
+    };
+  }
+
+  return {
+    intent: "DEX_INFO",
+    reply:
+      `Best ask on ${baseToken}/${quoteToken} is $${Number(market.bestAsk).toFixed(4)} ` +
+      `with ${formatDisplayedAmount(market.totalAskDepth)} ${baseToken} visible on the ask side.`
   };
 }
 
 export function respondToMessage(message, context = {}) {
   const safeMessage = sanitizeMessage(message);
   const normalized = safeMessage.toLowerCase();
-  const { blockNumber, prices, sendableBalances, walletAddress } = resolveContext(context);
+  const { blockNumber, dexContext, prices, sendableBalances, walletAddress } = resolveContext(context);
   const ownedTokens = getOwnedTokenBalances(sendableBalances);
-  const directMode = buildDirectModeConfig(walletAddress, prices);
 
-  const swapQuote = parseSwapQuote(safeMessage, walletAddress, prices);
-  if (swapQuote) {
-    if (walletAddress) {
-      const sourceBalance = getTokenSendableBalance(sendableBalances, swapQuote.fromToken);
-
-      if (sourceBalance <= 0 && Number(swapQuote.amount) > 0) {
-        return {
-          intent: "ZERO_BALANCE_MODE",
-          reply:
-            `No sendable ${swapQuote.fromToken} is available right now. ` +
-            `Only a zero-value command is allowed, for example: "Swap 0 ${swapQuote.fromToken.toLowerCase()} to ${swapQuote.toToken.toLowerCase()}".`
-        };
-      }
-
-      if (Number(swapQuote.amount) > sourceBalance) {
-        return {
-          intent: "BALANCE_LIMIT",
-          reply:
-            `You only have ${formatDisplayedAmount(sourceBalance)} ${swapQuote.fromToken} sendable. ` +
-            "Use an amount less than or equal to that balance."
-        };
-      }
-    }
-
-    return {
-      intent: "SWAP_QUOTE",
-      reply:
-        `${swapQuote.amount} ${swapQuote.fromToken} = ${swapQuote.receiveAmount} ${swapQuote.toToken}\n\n` +
-        "I staged that quote in the swap widget. Review it and sign in MiniMask when you're ready.",
-      swapQuote
-    };
+  const dexOrder = parseDexOrder(safeMessage, dexContext);
+  if (dexOrder) {
+    return dexOrder;
   }
 
-  const priceQuery = parsePriceQuery(safeMessage, walletAddress, prices);
-  if (priceQuery) {
-    return {
-      intent: "PRICE_QUERY",
-      reply: `${priceQuery.amount} ${priceQuery.fromToken} = ${priceQuery.receiveAmount} ${priceQuery.toToken}`,
-      swapQuote: priceQuery
-    };
+  const bestAsk = parseBestAsk(safeMessage, dexContext);
+  if (bestAsk) {
+    return bestAsk;
   }
 
-  const bestSwap = parseBestSwap(safeMessage);
-  if (bestSwap) {
-    const suggestion = buildBestSwapSuggestion(bestSwap);
+  if (/\bcancel\b.*\border|\border.*\bcancel/i.test(normalized) || normalized.includes("cancel orders")) {
     return {
-      intent: "BEST_SWAP",
-      reply: suggestion?.message || suggestion?.reply || "I couldn't determine the best swap target."
+      dexAction: {
+        type: "CANCEL_ALL"
+      },
+      intent: "DEX_CANCEL",
+      reply: "Cancelling every open order from this wallet on the live DEX."
     };
   }
 
@@ -186,15 +253,7 @@ export function respondToMessage(message, context = {}) {
     return {
       intent: "OPEN_EXCHANGE",
       openMode: "exchange",
-      reply: "Exchange mode is ready. I switched the action widget to direct settlement."
-    };
-  }
-
-  if (normalized.includes("open swap")) {
-    return {
-      intent: "OPEN_SWAP",
-      openMode: "swap",
-      reply: "Swap mode is ready. I switched the widget to token conversion."
+      reply: "The live orderbook is ready. I opened the exchange overlay."
     };
   }
 
@@ -202,7 +261,7 @@ export function respondToMessage(message, context = {}) {
     return {
       intent: "REFRESH",
       requestRefresh: true,
-      reply: "Refreshing wallet, balances, prices, block data, and activity now."
+      reply: "Refreshing wallet, balances, prices, blocks, and the live exchange book now."
     };
   }
 
@@ -278,14 +337,11 @@ export function respondToMessage(message, context = {}) {
       reply:
         ownedTokens.length > 0
           ? `You currently own sendable ${ownedTokens.map((item) => item.symbol).join(" and ")}.`
-          : "MiniMask is connected, but I don't see any sendable MINIMA or USDT yet."
+          : "MiniMask is connected, but I do not see any sendable tokens yet."
     };
   }
 
-  if (
-    normalized.includes("do i have enough balance") ||
-    normalized.includes("enough balance")
-  ) {
+  if (normalized.includes("do i have enough balance") || normalized.includes("enough balance")) {
     return {
       intent: "SUFFICIENCY",
       reply:
@@ -303,7 +359,7 @@ export function respondToMessage(message, context = {}) {
     return {
       intent: "ZERO_BALANCE_MODE",
       reply:
-        "Zero-balance mode is active when MiniMask reports no sendable funds. In that state, only commands using amount 0 are allowed, such as 'Send 0 minima to Mx...' or 'Swap 0 minima to usdt'."
+        "Zero-balance mode is active when MiniMask reports no sendable funds. In that state, only commands using amount 0 are allowed, such as 'Send 0 minima to Mx...'."
     };
   }
 
@@ -314,7 +370,7 @@ export function respondToMessage(message, context = {}) {
         ? `MiniMask is connected at ${formatWalletAddress(walletAddress)}. ${getPortfolioSummary(
             sendableBalances
           )}`
-        : "MiniMask flow is ready. Connect your wallet and I can help with live balances, swaps, and sends."
+        : "MiniMask flow is ready. Connect your wallet and I can help with live balances, orderbook actions, and secure sends."
     };
   }
 
@@ -322,20 +378,19 @@ export function respondToMessage(message, context = {}) {
     return {
       intent: "BALANCE_HELP",
       reply:
-        "Sendable balance is what MiniMask says you can spend right now. The widget uses that live value to enable or disable swap and send actions."
+        "Sendable balance is what MiniMask says you can spend right now. The DEX uses that live value to validate orders before they hit the book."
     };
   }
 
   if (
     normalized.includes("send funds") ||
     normalized.includes("send money") ||
-    normalized.includes("how do i send") ||
-    normalized.includes("facilitate")
+    normalized.includes("how do i send")
   ) {
     return {
       intent: "SEND_HELP",
       reply:
-        "Say something like 'Send 2 minima to Mx...' and I'll stage the details in the MiniMask action widget for you."
+        "Say something like 'Send 2 minima to Mx...' and I will stage the details in the MiniMask confirmation flow."
     };
   }
 
@@ -344,19 +399,7 @@ export function respondToMessage(message, context = {}) {
       intent: "WALLET_HELP",
       reply: walletAddress
         ? `MiniMask is connected. Use refresh to reload ${getPortfolioSummary(sendableBalances)}.`
-        : "Use Connect Wallet to detect MiniMask, then refresh to load your live sendable balances and available tokens."
-    };
-  }
-
-  if (
-    normalized.includes("direct on-chain") ||
-    normalized.includes("swap route") ||
-    normalized.includes("how does")
-  ) {
-    return {
-      intent: "MODE_HELP",
-      reply:
-        `${directMode.modeLabel} means the app prepares the transaction in the browser, MiniMask signs it locally, and the UI tracks confirmation directly from the Minima blockchain.`
+        : "Use Connect Wallet to detect MiniMask, then refresh to sync your live sendable balances into the DEX."
     };
   }
 
@@ -364,7 +407,7 @@ export function respondToMessage(message, context = {}) {
     return {
       intent: "BLOCKCHAIN_HELP",
       reply:
-        "Every send or swap request is signed in MiniMask, submitted to Minima, and checked with txpow confirmation polling before the UI marks it successful."
+        "The exchange posts real orders to a live book, builds raw transactions in the browser, and uses MiniMask to sign or post each atomic trade on Minima."
     };
   }
 
@@ -374,7 +417,7 @@ export function respondToMessage(message, context = {}) {
       reply:
         blockNumber !== null
           ? `Latest visible Minima block: #${blockNumber}.`
-          : "I can't read the latest Minima block yet. Refresh once MiniMask is available."
+          : "I cannot read the latest Minima block yet. Refresh once MiniMask is available."
     };
   }
 
@@ -382,13 +425,13 @@ export function respondToMessage(message, context = {}) {
     return {
       intent: "MINIMA_INFO",
       reply:
-        "Minima is a lightweight blockchain designed for decentralization at the edge. In this dashboard, MiniMask is the secure bridge for balances, sends, and on-chain swap signals."
+        "Minima is a lightweight blockchain designed for decentralization at the edge. In this portal, MiniMask is the secure bridge for balances, live orders, and atomic DEX trades."
     };
   }
 
   return {
     intent: "UNKNOWN",
     reply:
-      "Ask me to check your balance, detect tokens, stage a send, quote a swap, show token prices, or explain how MiniMask works."
+      "Ask me to buy or sell on the live book, cancel orders, show the best ask, check your balance, list tokens, or stage a secure MiniMask send."
   };
 }

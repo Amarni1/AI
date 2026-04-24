@@ -64,6 +64,46 @@ export function extractAddress(response) {
   return null;
 }
 
+export function extractPublicKey(response) {
+  if (!response) {
+    return null;
+  }
+
+  if (typeof response === "string") {
+    return response;
+  }
+
+  if (response.response?.publickey) {
+    return response.response.publickey;
+  }
+
+  if (response.response?.publicKey) {
+    return response.response.publicKey;
+  }
+
+  if (response.data?.publickey) {
+    return response.data.publickey;
+  }
+
+  if (response.data?.publicKey) {
+    return response.data.publicKey;
+  }
+
+  if (typeof response.data === "string") {
+    return response.data;
+  }
+
+  if (response.publickey) {
+    return response.publickey;
+  }
+
+  if (response.publicKey) {
+    return response.publicKey;
+  }
+
+  return null;
+}
+
 function extractBalance(response) {
   if (response === undefined || response === null) {
     return null;
@@ -190,6 +230,26 @@ export const MiniMask = {
     });
   },
 
+  getPublicKey(callback) {
+    ensureMiniMask();
+
+    if (typeof window.MINIMASK.account.getPublicKey !== "function") {
+      throw new Error("MiniMask public key access is not available in this wallet.");
+    }
+
+    window.MINIMASK.account.getPublicKey((result) => {
+      const publicKey = extractPublicKey(result);
+
+      if (publicKey) {
+        callback(publicKey);
+        return;
+      }
+
+      logUnknownFormat("getPublicKey", result);
+      callback(null);
+    });
+  },
+
   balance(callback) {
     ensureMiniMask();
     window.MINIMASK.account.balance((result) => {
@@ -212,6 +272,18 @@ export const MiniMask = {
     const state = options.state || { 0: safeAmount, 1: address };
 
     window.MINIMASK.account.send(safeAmount, address, tokenid, state, (result) => {
+      callback(extractPayload(result) ?? result);
+    });
+  },
+
+  sign(txndata, post, callback) {
+    ensureMiniMask();
+
+    if (typeof window.MINIMASK.account.sign !== "function") {
+      throw new Error("MiniMask raw transaction signing is not available in this wallet.");
+    }
+
+    window.MINIMASK.account.sign(txndata, post, (result) => {
       callback(extractPayload(result) ?? result);
     });
   },
@@ -332,6 +404,16 @@ export const MiniMask = {
     });
   },
 
+  getPublicKeyAsync() {
+    return new Promise((resolve, reject) => {
+      try {
+        this.getPublicKey((result) => resolve(result));
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
   initAsync() {
     return new Promise((resolve, reject) => {
       try {
@@ -356,6 +438,16 @@ export const MiniMask = {
     return new Promise((resolve, reject) => {
       try {
         this.send(amount, address, (result) => resolve(result), options);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  signAsync(txndata, post) {
+    return new Promise((resolve, reject) => {
+      try {
+        this.sign(txndata, post, (result) => resolve(result));
       } catch (error) {
         reject(error);
       }

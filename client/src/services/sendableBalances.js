@@ -52,7 +52,7 @@ function inferSymbol(record) {
 
   for (const candidate of candidates) {
     const normalized = String(candidate || "").trim().toUpperCase();
-    if (TOKEN_OPTIONS.includes(normalized)) {
+    if (normalized) {
       return normalized;
     }
   }
@@ -128,27 +128,42 @@ export function normalizeSendableBalances(rawBalance) {
     })
     .filter(Boolean);
 
-  return TOKEN_OPTIONS.map((symbol) => {
-    const existing = mapped.find((item) => item.symbol === symbol);
+  const availableSymbols = Array.from(
+    new Set([...TOKEN_OPTIONS, ...mapped.map((item) => item.symbol).filter(Boolean)])
+  );
 
-    if (existing) {
-      return existing;
-    }
+  return availableSymbols
+    .map((symbol) => {
+      const existing = mapped.find((item) => item.symbol === symbol);
 
-    return {
-      amount: "0",
-      coins: 0,
-      confirmed: "0",
-      configured: Boolean(KNOWN_TOKEN_IDS[symbol]),
-      decimals: 8,
-      id: symbol,
-      price: TOKEN_PRICES[symbol] || 0,
-      sendable: "0",
-      symbol,
-      token: symbol,
-      tokenId: KNOWN_TOKEN_IDS[symbol] || "",
-      unconfirmed: "0",
-      usdValue: "0.00"
-    };
-  }).sort((left, right) => Number(right.usdValue) - Number(left.usdValue));
+      if (existing) {
+        return existing;
+      }
+
+      return {
+        amount: "0",
+        coins: 0,
+        confirmed: "0",
+        configured: Boolean(KNOWN_TOKEN_IDS[symbol]),
+        decimals: 8,
+        id: symbol,
+        price: TOKEN_PRICES[symbol] || 0,
+        sendable: "0",
+        symbol,
+        token: symbol,
+        tokenId: KNOWN_TOKEN_IDS[symbol] || "",
+        unconfirmed: "0",
+        usdValue: "0.00"
+      };
+    })
+    .sort((left, right) => {
+      const leftOwned = Number(left.sendable || 0) > 0 ? 1 : 0;
+      const rightOwned = Number(right.sendable || 0) > 0 ? 1 : 0;
+
+      if (leftOwned !== rightOwned) {
+        return rightOwned - leftOwned;
+      }
+
+      return Number(right.usdValue) - Number(left.usdValue);
+    });
 }
