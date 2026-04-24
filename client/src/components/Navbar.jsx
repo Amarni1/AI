@@ -25,14 +25,13 @@ export default function Navbar({ isDark, onToggleTheme }) {
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.45em] text-ma-gold">
-              Minima AI
+              Minima Finance
             </p>
             <h1 className="mt-1 font-display text-3xl font-semibold text-slate-900 dark:text-white sm:text-4xl">
-              Wallet & Swap Copilot
+              Minima Finance Portal
             </h1>
             <p className="mt-2 max-w-2xl text-sm font-medium text-slate-700 dark:text-slate-200">
-              Gold-and-black production dashboard with MiniMask signing, live sendable balances,
-              and AI-guided wallet actions.
+              Secure wallet access, token exchange, live balances, and blockchain settlement tools powered by MiniMask.
             </p>
           </div>
         </div>
@@ -40,7 +39,7 @@ export default function Navbar({ isDark, onToggleTheme }) {
         <div className="flex flex-col gap-4 xl:items-end">
           <div className="flex items-center gap-3 self-start xl:self-auto">
             <div className="hidden rounded-full border border-white/70 bg-white/80 px-4 py-2 text-xs font-medium uppercase tracking-[0.24em] text-slate-500 shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-white/5 dark:text-slate-300 sm:block">
-              AI + Direct On-Chain Flow
+              Live Wallet + Network Data
             </div>
             <ThemeToggle isDark={isDark} onToggle={onToggleTheme} />
           </div>

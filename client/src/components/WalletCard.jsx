@@ -73,7 +73,7 @@ export default function WalletCard({
               disabled={!isAvailable || isSyncing}
               className="btn-secondary disabled:pointer-events-none disabled:opacity-60"
             >
-              {isSyncing ? "Refreshing..." : "Refresh Data"}
+              {isSyncing ? "Refreshing..." : "Refresh Everything"}
             </button>
             {!isAvailable ? (
               <button onClick={onInstall} className="btn-secondary">

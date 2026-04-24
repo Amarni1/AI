@@ -23,6 +23,8 @@ import {
 } from "../services/walletPortfolio";
 
 const DEFAULT_STATUS_MESSAGE = "Connect MiniMask to activate the wallet action widget.";
+const ZERO_BALANCE_WARNING =
+  "Wallet balance is 0. Only zero-value transactions are allowed.";
 
 let cachedSwapSession = {
   history: [],
@@ -65,8 +67,12 @@ function getSwapDisabledReason({ address, amount, fromToken, previewQuote, sourc
     return "Connect MiniMask to swap.";
   }
 
+  if (String(amount ?? "").trim() === "") {
+    return "Enter a valid swap amount.";
+  }
+
   const numericAmount = Number(amount);
-  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+  if (!Number.isFinite(numericAmount) || numericAmount < 0) {
     return "Enter a valid swap amount.";
   }
 
@@ -74,8 +80,8 @@ function getSwapDisabledReason({ address, amount, fromToken, previewQuote, sourc
     return "Choose two different tokens to quote the swap.";
   }
 
-  if (sourceBalance <= 0) {
-    return `No sendable ${fromToken} available.`;
+  if (sourceBalance <= 0 && numericAmount > 0) {
+    return ZERO_BALANCE_WARNING;
   }
 
   if (numericAmount > sourceBalance) {
@@ -94,13 +100,17 @@ function getSendDisabledReason({ address, amount, recipientAddress, sourceBalanc
     return "Enter a recipient address.";
   }
 
-  const numericAmount = Number(amount);
-  if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+  if (String(amount ?? "").trim() === "") {
     return "Enter a valid send amount.";
   }
 
-  if (sourceBalance <= 0) {
-    return `No sendable ${token} available.`;
+  const numericAmount = Number(amount);
+  if (!Number.isFinite(numericAmount) || numericAmount < 0) {
+    return "Enter a valid send amount.";
+  }
+
+  if (sourceBalance <= 0 && numericAmount > 0) {
+    return ZERO_BALANCE_WARNING;
   }
 
   if (numericAmount > sourceBalance) {
@@ -186,7 +196,13 @@ function buildHistoryPatch(type, phase, errorMessage = "") {
   };
 }
 
-export function useSwapDex({ address, refreshWallet, send, sendableBalances = [] }) {
+export function useSwapDex({
+  address,
+  marketPrices = {},
+  refreshWallet,
+  send,
+  sendableBalances = []
+}) {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [swapLoading, setSwapLoading] = useState(false);
   const [sendLoading, setSendLoading] = useState(false);
@@ -209,7 +225,10 @@ export function useSwapDex({ address, refreshWallet, send, sendableBalances = []
 
   const pollTimerRef = useRef(null);
 
-  const config = useMemo(() => buildDirectModeConfig(address), [address]);
+  const config = useMemo(
+    () => buildDirectModeConfig(address, marketPrices),
+    [address, marketPrices]
+  );
   const availableTokens = useMemo(
     () => prioritizeOwnedTokens(TOKEN_OPTIONS, sendableBalances),
     [sendableBalances]
@@ -219,8 +238,8 @@ export function useSwapDex({ address, refreshWallet, send, sendableBalances = []
     [sendableBalances]
   );
   const previewQuote = useMemo(
-    () => buildDirectSwapQuote(form.amount, form.fromToken, form.toToken, address),
-    [address, form.amount, form.fromToken, form.toToken]
+    () => buildDirectSwapQuote(form.amount, form.fromToken, form.toToken, address, marketPrices),
+    [address, form.amount, form.fromToken, form.toToken, marketPrices]
   );
   const sourceBalance = useMemo(
     () => getTokenSendableBalance(sendableBalances, form.fromToken),
@@ -327,7 +346,8 @@ export function useSwapDex({ address, refreshWallet, send, sendableBalances = []
         override.amount ?? form.amount,
         override.fromToken ?? form.fromToken,
         override.toToken ?? form.toToken,
-        address
+        address,
+        marketPrices
       );
 
       if (!nextQuote) {
@@ -343,7 +363,7 @@ export function useSwapDex({ address, refreshWallet, send, sendableBalances = []
     } finally {
       setQuoteLoading(false);
     }
-  }, [address, form.amount, form.fromToken, form.toToken]);
+  }, [address, form.amount, form.fromToken, form.toToken, marketPrices]);
 
   const executeSwap = useCallback(async () => {
     const preparedQuote = quote || previewQuote;
@@ -524,12 +544,18 @@ export function useSwapDex({ address, refreshWallet, send, sendableBalances = []
       toToken: nextQuote.toToken || "USDT"
     });
     setQuote(
-      buildDirectSwapQuote(nextQuote.amount, nextQuote.fromToken, nextQuote.toToken, address)
+      buildDirectSwapQuote(
+        nextQuote.amount,
+        nextQuote.fromToken,
+        nextQuote.toToken,
+        address,
+        marketPrices
+      )
     );
     setStatus(
-      `AI staged ${nextQuote.amount} ${nextQuote.fromToken} -> ${nextQuote.receiveAmount} ${nextQuote.toToken}.`
+      `Assistant staged ${nextQuote.amount} ${nextQuote.fromToken} -> ${nextQuote.receiveAmount} ${nextQuote.toToken}.`
     );
-  }, [address]);
+  }, [address, marketPrices]);
 
   const applyAiSend = useCallback((nextDraft) => {
     if (!nextDraft) {
@@ -542,20 +568,42 @@ export function useSwapDex({ address, refreshWallet, send, sendableBalances = []
       amount: String(nextDraft.amount ?? current.amount ?? ""),
       token: nextDraft.token || current.token
     }));
-    setStatus(`AI staged a ${nextDraft.amount} ${nextDraft.token} wallet send.`);
+    setStatus(`Assistant staged a ${nextDraft.amount} ${nextDraft.token} settlement request.`);
   }, []);
 
-  const refreshAll = useCallback(async () => {
+  const resetUiState = useCallback(() => {
+    setQuote(null);
+    setHistoryError("");
+    setTransactionFlow(null);
+    setForm((current) => ({
+      ...current,
+      amount: "0"
+    }));
+    setSendForm((current) => ({
+      ...current,
+      address: "",
+      amount: "0"
+    }));
+  }, []);
+
+  const refreshAll = useCallback(async (options = {}) => {
+    const { resetUi = false, walletRefreshed = false } = options;
     setHistoryLoading(true);
     setHistoryError("");
 
     try {
-      await Promise.allSettled([refreshWallet ? refreshWallet() : Promise.resolve()]);
+      if (resetUi) {
+        resetUiState();
+      }
+
+      await Promise.allSettled([
+        walletRefreshed ? Promise.resolve() : refreshWallet ? refreshWallet() : Promise.resolve()
+      ]);
       setStatus(address ? config.statusLabel : DEFAULT_STATUS_MESSAGE);
     } finally {
       setHistoryLoading(false);
     }
-  }, [address, config.statusLabel, refreshWallet]);
+  }, [address, config.statusLabel, refreshWallet, resetUiState]);
 
   const setField = useCallback((field, value) => {
     setForm((current) => ({
@@ -572,11 +620,17 @@ export function useSwapDex({ address, refreshWallet, send, sendableBalances = []
   }, []);
 
   const flipTokens = useCallback(() => {
-    setForm((current) => ({
-      ...current,
-      fromToken: current.toToken,
-      toToken: current.fromToken
-    }));
+    setForm((current) => {
+      if (current.toToken === current.fromToken) {
+        return current;
+      }
+
+      return {
+        ...current,
+        fromToken: current.toToken,
+        toToken: current.fromToken
+      };
+    });
   }, []);
 
   useEffect(() => {
@@ -677,6 +731,7 @@ export function useSwapDex({ address, refreshWallet, send, sendableBalances = []
     quoteLoading,
     refreshAll,
     requestQuote,
+    resetUiState,
     sendDisabledReason,
     sendForm,
     sendLoading,
@@ -687,6 +742,7 @@ export function useSwapDex({ address, refreshWallet, send, sendableBalances = []
     status,
     swapDisabledReason,
     swapLoading,
-    transactionFlow
+    transactionFlow,
+    zeroBalanceWarning: ZERO_BALANCE_WARNING
   };
 }

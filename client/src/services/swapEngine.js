@@ -30,9 +30,19 @@ export function getTokenDefinitions() {
   }));
 }
 
-export function convertSwapAmount(amount, fromToken, toToken) {
+export function mergeTokenPrices(overrides = {}) {
+  return {
+    ...TOKEN_PRICES,
+    ...Object.fromEntries(
+      Object.entries(overrides || {}).map(([token, price]) => [String(token).toUpperCase(), Number(price)])
+    )
+  };
+}
+
+export function convertSwapAmount(amount, fromToken, toToken, overrides = TOKEN_PRICES) {
   const source = normalizeTokenSymbol(fromToken);
   const target = normalizeTokenSymbol(toToken);
+  const prices = mergeTokenPrices(overrides);
 
   if (!source || !target) {
     return null;
@@ -44,25 +54,39 @@ export function convertSwapAmount(amount, fromToken, toToken) {
 
   const numericAmount = Number(amount);
   if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+    if (numericAmount === 0) {
+      return {
+        amount: 0,
+        fromToken: source,
+        priceFrom: prices[source],
+        priceTo: prices[target],
+        receiveAmount: "0.0000",
+        toToken: target,
+        usdValue: "0.00"
+      };
+    }
+
     return null;
   }
 
-  const usdValue = numericAmount * TOKEN_PRICES[source];
+  const usdValue = numericAmount * prices[source];
   return {
     amount: numericAmount,
     fromToken: source,
-    priceFrom: TOKEN_PRICES[source],
-    priceTo: TOKEN_PRICES[target],
-    receiveAmount: (usdValue / TOKEN_PRICES[target]).toFixed(4),
+    priceFrom: prices[source],
+    priceTo: prices[target],
+    receiveAmount: (usdValue / prices[target]).toFixed(4),
     toToken: target,
     usdValue: usdValue.toFixed(2)
   };
 }
 
-export function getTokenPriceCards() {
+export function getTokenPriceCards(overrides = TOKEN_PRICES) {
+  const prices = mergeTokenPrices(overrides);
+
   return getTokenDefinitions().map((token) => ({
     configured: token.configured,
-    price: token.price,
+    price: prices[token.symbol],
     token: token.symbol,
     tokenId: token.tokenId
   }));
@@ -87,7 +111,7 @@ export function formatSwapSummary(quote) {
   return `${quote.amount} ${quote.fromToken} = ${quote.receiveAmount} ${quote.toToken}`;
 }
 
-export function buildDirectModeConfig(walletAddress = "") {
+export function buildDirectModeConfig(walletAddress = "", overrides = TOKEN_PRICES) {
   return {
     message:
       "Transactions are signed in MiniMask, written directly to the Minima blockchain, and tracked client-side until confirmation.",
@@ -96,12 +120,18 @@ export function buildDirectModeConfig(walletAddress = "") {
     recipientAddress: walletAddress || "Connect MiniMask",
     signalAmount: DEFAULT_SIGNAL_AMOUNT,
     statusLabel: walletAddress ? "Direct On-Chain Mode Active" : "Awaiting wallet connection",
-    tokens: getTokenDefinitions()
+    tokens: getTokenPriceCards(overrides)
   };
 }
 
-export function buildDirectSwapQuote(amount, fromToken, toToken, walletAddress = "") {
-  const quote = convertSwapAmount(amount, fromToken, toToken);
+export function buildDirectSwapQuote(
+  amount,
+  fromToken,
+  toToken,
+  walletAddress = "",
+  overrides = TOKEN_PRICES
+) {
+  const quote = convertSwapAmount(amount, fromToken, toToken, overrides);
 
   if (!quote) {
     return null;

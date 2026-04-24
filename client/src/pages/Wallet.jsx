@@ -3,6 +3,7 @@ import StatusPanel from "../components/StatusPanel";
 import TransactionHistory from "../components/TransactionHistory";
 import WalletCard from "../components/WalletCard";
 import { useMiniMask } from "../hooks/useMiniMask";
+import { usePortalInsights } from "../hooks/usePortalInsights";
 import { useSwapDex } from "../hooks/useSwapDex";
 import {
   getOwnedTokenBalances,
@@ -11,6 +12,7 @@ import {
 
 export default function Wallet() {
   const [status, setStatus] = useState("");
+  const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const {
     address,
     balance,
@@ -24,8 +26,10 @@ export default function Wallet() {
     sendableBalances,
     tokenBalances
   } = useMiniMask();
+  const insights = usePortalInsights({ isMiniMaskAvailable: isAvailable });
   const dex = useSwapDex({
     address,
+    marketPrices: insights.prices,
     refreshWallet: refresh,
     send,
     sendableBalances
@@ -50,11 +54,18 @@ export default function Wallet() {
   }
 
   async function refreshWallet() {
+    setIsRefreshingAll(true);
     try {
-      await dex.refreshAll();
+      await Promise.allSettled([
+        refresh(),
+        insights.refreshAll(),
+        dex.refreshAll({ resetUi: true, walletRefreshed: true })
+      ]);
       setStatus("Wallet refreshed.");
     } catch (currentError) {
       setStatus(currentError.message);
+    } finally {
+      setIsRefreshingAll(false);
     }
   }
 
@@ -75,7 +86,7 @@ export default function Wallet() {
         error={error}
         isAvailable={isAvailable}
         isChecking={isChecking}
-        isSyncing={isSyncing}
+        isSyncing={isSyncing || isRefreshingAll}
         onConnect={connectWallet}
         onInstall={handleInstallMiniMask}
         onRefresh={refreshWallet}
@@ -86,7 +97,7 @@ export default function Wallet() {
         connected={Boolean(address)}
         hasSpendableFunds={ownedTokenBalances.length > 0}
         ownedTokenCount={ownedTokenBalances.length}
-        status={status || dex.status}
+        status={status || insights.blockError || insights.priceError || dex.status}
         transactionFlow={dex.transactionFlow}
       />
 

@@ -20,18 +20,22 @@ function sanitizeMessage(message) {
 function resolveContext(context = {}) {
   if (typeof context === "string") {
     return {
+      blockNumber: null,
+      prices: {},
       sendableBalances: [],
       walletAddress: context
     };
   }
 
   return {
+    blockNumber: context?.blockNumber ?? null,
+    prices: context?.prices || {},
     sendableBalances: context?.sendableBalances || [],
     walletAddress: context?.walletAddress || context?.address || ""
   };
 }
 
-function parseSwapQuote(message, walletAddress = "") {
+function parseSwapQuote(message, walletAddress = "", prices = {}) {
   const match = message.match(
     /(?:swap|convert|trade|exchange)\s+(\d+(\.\d+)?)\s+([a-z]+)\s+(?:to|for|into)\s+([a-z]+)/i
   );
@@ -40,10 +44,10 @@ function parseSwapQuote(message, walletAddress = "") {
     return null;
   }
 
-  return buildDirectSwapQuote(match[1], match[3], match[4], walletAddress);
+  return buildDirectSwapQuote(match[1], match[3], match[4], walletAddress, prices);
 }
 
-function parsePriceQuery(message, walletAddress = "") {
+function parsePriceQuery(message, walletAddress = "", prices = {}) {
   const match = message.match(
     /(?:how much is|what is|quote)\s+(\d+(\.\d+)?)\s+([a-z]+)\s+(?:in|to)\s+([a-z]+)/i
   );
@@ -52,7 +56,7 @@ function parsePriceQuery(message, walletAddress = "") {
     return null;
   }
 
-  return buildDirectSwapQuote(match[1], match[3], match[4], walletAddress);
+  return buildDirectSwapQuote(match[1], match[3], match[4], walletAddress, prices);
 }
 
 function parseBestSwap(message) {
@@ -88,11 +92,11 @@ function parseSendDraft(message) {
 export function respondToMessage(message, context = {}) {
   const safeMessage = sanitizeMessage(message);
   const normalized = safeMessage.toLowerCase();
-  const { sendableBalances, walletAddress } = resolveContext(context);
+  const { blockNumber, prices, sendableBalances, walletAddress } = resolveContext(context);
   const ownedTokens = getOwnedTokenBalances(sendableBalances);
-  const directMode = buildDirectModeConfig(walletAddress);
+  const directMode = buildDirectModeConfig(walletAddress, prices);
 
-  const swapQuote = parseSwapQuote(safeMessage, walletAddress);
+  const swapQuote = parseSwapQuote(safeMessage, walletAddress, prices);
   if (swapQuote) {
     return {
       intent: "SWAP_QUOTE",
@@ -103,7 +107,7 @@ export function respondToMessage(message, context = {}) {
     };
   }
 
-  const priceQuery = parsePriceQuery(safeMessage, walletAddress);
+  const priceQuery = parsePriceQuery(safeMessage, walletAddress, prices);
   if (priceQuery) {
     return {
       intent: "PRICE_QUERY",
@@ -156,15 +160,42 @@ export function respondToMessage(message, context = {}) {
     };
   }
 
+  if (normalized.includes("open exchange")) {
+    return {
+      intent: "OPEN_EXCHANGE",
+      openMode: "exchange",
+      reply: "Exchange mode is ready. I switched the action widget to direct settlement."
+    };
+  }
+
+  if (normalized.includes("open swap")) {
+    return {
+      intent: "OPEN_SWAP",
+      openMode: "swap",
+      reply: "Swap mode is ready. I switched the widget to token conversion."
+    };
+  }
+
+  if (normalized.includes("refresh balances") || normalized.includes("refresh wallet")) {
+    return {
+      intent: "REFRESH",
+      requestRefresh: true,
+      reply: "Refreshing wallet, balances, prices, block data, and activity now."
+    };
+  }
+
   if (
     normalized.includes("show token prices") ||
     normalized === "show prices" ||
-    normalized.includes("token prices")
+    normalized.includes("token prices") ||
+    normalized.includes("what is minima price") ||
+    normalized.includes("what's minima price") ||
+    normalized.includes("minima price")
   ) {
     return {
       intent: "PRICE_LIST",
-      priceTable: getTokenPriceCards(),
-      reply: getTokenPriceCards().map((item) => `${item.token} = $${item.price}`).join("\n")
+      priceTable: getTokenPriceCards(prices),
+      reply: getTokenPriceCards(prices).map((item) => `${item.token} = $${item.price}`).join("\n")
     };
   }
 
@@ -189,12 +220,29 @@ export function respondToMessage(message, context = {}) {
     };
   }
 
+  if (normalized.includes("show my wallet")) {
+    if (!walletAddress) {
+      return {
+        intent: "WALLET",
+        reply: "Connect MiniMask first so I can show your live wallet details."
+      };
+    }
+
+    return {
+      intent: "WALLET",
+      reply:
+        `Wallet: ${formatWalletAddress(walletAddress)}\n` +
+        `Sendable: ${getPortfolioSummary(sendableBalances)}`
+    };
+  }
+
   if (
     normalized.includes("detect tokens") ||
     normalized.includes("what tokens") ||
     normalized.includes("tokens available") ||
     normalized.includes("which tokens") ||
-    normalized.includes("what do i own")
+    normalized.includes("what do i own") ||
+    normalized.includes("list my tokens")
   ) {
     if (!walletAddress) {
       return {
@@ -209,6 +257,19 @@ export function respondToMessage(message, context = {}) {
         ownedTokens.length > 0
           ? `You currently own sendable ${ownedTokens.map((item) => item.symbol).join(" and ")}.`
           : "MiniMask is connected, but I don't see any sendable MINIMA or USDT yet."
+    };
+  }
+
+  if (
+    normalized.includes("do i have enough balance") ||
+    normalized.includes("enough balance")
+  ) {
+    return {
+      intent: "SUFFICIENCY",
+      reply:
+        ownedTokens.length > 0
+          ? `Yes, you currently have ${getPortfolioSummary(sendableBalances)} available to sign from.`
+          : "No sendable balance is available right now. Only zero-value actions are allowed."
     };
   }
 
@@ -270,6 +331,16 @@ export function respondToMessage(message, context = {}) {
       intent: "BLOCKCHAIN_HELP",
       reply:
         "Every send or swap request is signed in MiniMask, submitted to Minima, and checked with txpow confirmation polling before the UI marks it successful."
+    };
+  }
+
+  if (normalized.includes("show latest block") || normalized.includes("latest block")) {
+    return {
+      intent: "BLOCK",
+      reply:
+        blockNumber !== null
+          ? `Latest visible Minima block: #${blockNumber}.`
+          : "I can't read the latest Minima block yet. Refresh once MiniMask is available."
     };
   }
 

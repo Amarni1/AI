@@ -3,7 +3,7 @@ export default function ThemeToggle({ isDark, onToggle }) {
     <button
       type="button"
       onClick={onToggle}
-      className="group relative inline-flex h-12 w-[92px] items-center rounded-full border border-white/65 bg-white/80 px-1 shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 dark:border-white/10 dark:bg-black/30"
+      className="group relative inline-flex h-12 w-[92px] items-center rounded-full border border-white/65 bg-[linear-gradient(180deg,#ffffff_0%,#f3f4f6_100%)] px-1 shadow-[0_16px_26px_rgba(15,23,42,0.08),0_7px_0_rgba(203,213,225,0.92)] transition hover:-translate-y-0.5 active:translate-y-[2px] dark:border-white/10 dark:bg-[linear-gradient(180deg,#111827_0%,#020617_100%)] dark:shadow-[0_16px_26px_rgba(0,0,0,0.35),0_7px_0_rgba(15,23,42,0.95)]"
       aria-label="Toggle color theme"
     >
       <span

@@ -48,11 +48,11 @@ html.dark body {
   }
 
   .btn-gold {
-    @apply inline-flex items-center rounded-full border border-[#8b6b10] bg-[linear-gradient(180deg,#fdf1b8_0%,#e0ba43_45%,#a87910_100%)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.18em] text-slate-950 shadow-[0_16px_28px_rgba(212,175,55,0.28),inset_0_1px_1px_rgba(255,255,255,0.8)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_20px_36px_rgba(212,175,55,0.38),inset_0_1px_1px_rgba(255,255,255,0.82)] active:translate-y-0 dark:border-[#f5d97d]/40 dark:text-slate-950;
+    @apply inline-flex items-center rounded-full border border-[#8b6b10] bg-[linear-gradient(180deg,#fff4c6_0%,#f1cf67_18%,#d4af37_52%,#94680a_100%)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.18em] text-slate-950 shadow-[0_20px_32px_rgba(212,175,55,0.34),0_8px_0_rgba(123,86,12,0.85),inset_0_1px_1px_rgba(255,255,255,0.88)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_24px_44px_rgba(212,175,55,0.42),0_10px_0_rgba(123,86,12,0.82),inset_0_1px_1px_rgba(255,255,255,0.92)] active:translate-y-[2px] active:shadow-[0_14px_24px_rgba(212,175,55,0.25),0_5px_0_rgba(123,86,12,0.92),inset_0_1px_1px_rgba(255,255,255,0.72)] dark:border-[#f5d97d]/40 dark:text-slate-950;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center rounded-full border border-black/10 bg-white px-5 py-3 text-sm font-bold uppercase tracking-[0.18em] text-slate-800 shadow-[0_12px_26px_rgba(15,23,42,0.08)] transition duration-200 hover:-translate-y-0.5 hover:border-ma-gold hover:text-ma-gold dark:border-white/10 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-ma-gold;
+    @apply inline-flex items-center rounded-full border border-black/10 bg-[linear-gradient(180deg,#ffffff_0%,#f3f4f6_100%)] px-5 py-3 text-sm font-extrabold uppercase tracking-[0.18em] text-slate-800 shadow-[0_16px_26px_rgba(15,23,42,0.08),0_7px_0_rgba(203,213,225,0.92)] transition duration-200 hover:-translate-y-0.5 hover:border-ma-gold hover:text-ma-gold hover:shadow-[0_18px_30px_rgba(15,23,42,0.12),0_8px_0_rgba(203,213,225,0.95)] active:translate-y-[2px] active:shadow-[0_10px_18px_rgba(15,23,42,0.08),0_4px_0_rgba(203,213,225,0.95)] dark:border-white/10 dark:bg-[linear-gradient(180deg,#111827_0%,#020617_100%)] dark:text-slate-100 dark:shadow-[0_16px_26px_rgba(0,0,0,0.35),0_7px_0_rgba(15,23,42,0.95)] dark:hover:border-ma-gold;
   }
 
   .input-premium {

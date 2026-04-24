@@ -28,7 +28,7 @@ export function formatSwapHistorySummary(item) {
 }
 
 export function formatHistoryLabel(item) {
-  return item?.type === "send" ? "Wallet Send" : "Direct Swap";
+  return item?.type === "send" ? "Exchange Settlement" : "Direct Swap";
 }
 
 export function formatHistorySummary(item) {

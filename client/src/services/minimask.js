@@ -121,6 +121,32 @@ function extractCoins(response) {
   return null;
 }
 
+function extractBlock(response) {
+  const payload = extractPayload(response);
+
+  const candidates = [
+    payload?.block,
+    payload?.blocknumber,
+    payload?.blockNumber,
+    payload?.height,
+    payload?.tip,
+    payload?.txpow?.header?.block,
+    response?.block,
+    response?.blocknumber,
+    response?.blockNumber,
+    response?.height
+  ];
+
+  for (const candidate of candidates) {
+    const numeric = Number(candidate);
+    if (Number.isFinite(numeric)) {
+      return numeric;
+    }
+  }
+
+  return null;
+}
+
 function ensureMegMethod(methodName) {
   const minimask = getMiniMask();
 
@@ -219,6 +245,21 @@ export const MiniMask = {
 
     minimask.meg.checktxpow(txpowid, (result) => {
       callback(extractPayload(result) ?? result);
+    });
+  },
+
+  block(callback) {
+    const method = ensureMegMethod("block");
+    method((result) => {
+      const block = extractBlock(result);
+
+      if (block !== null) {
+        callback(block, extractPayload(result) ?? result);
+        return;
+      }
+
+      logUnknownFormat("block", result);
+      callback(null, extractPayload(result) ?? result);
     });
   },
 
@@ -335,6 +376,16 @@ export const MiniMask = {
     return new Promise((resolve, reject) => {
       try {
         this.checkTxPow(txpowid, (result) => resolve(result));
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+
+  blockAsync() {
+    return new Promise((resolve, reject) => {
+      try {
+        this.block((result, raw) => resolve(result ?? raw));
       } catch (error) {
         reject(error);
       }
